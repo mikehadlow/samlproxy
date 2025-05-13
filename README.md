@@ -19,6 +19,10 @@ Start with:
 ```zsh
 bun run dev
 ```
+Overmind will start all three processes at the following URLs:
+proxy  <http://localhost:7272>
+sp     <http://localhost:7282>
+idp    <http://localhost:7292>
 
 ## TODO:
 1. Setup multi-package bun project. DONE
