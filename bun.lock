@@ -6,6 +6,9 @@
     },
     "packages/proxy": {
       "name": "proxy",
+      "dependencies": {
+        "hono": "^4.7.9",
+      },
       "devDependencies": {
         "@types/bun": "latest",
       },
@@ -13,8 +16,11 @@
         "typescript": "^5",
       },
     },
-    "packages/testipd": {
-      "name": "testipd",
+    "packages/testidp": {
+      "name": "testidp",
+      "dependencies": {
+        "hono": "^4.7.9",
+      },
       "devDependencies": {
         "@types/bun": "latest",
       },
@@ -24,6 +30,9 @@
     },
     "packages/testsp": {
       "name": "testsp",
+      "dependencies": {
+        "hono": "^4.7.9",
+      },
       "devDependencies": {
         "@types/bun": "latest",
       },
@@ -39,9 +48,11 @@
 
     "bun-types": ["bun-types@1.2.13", "", { "dependencies": { "@types/node": "*" } }, "sha512-rRjA1T6n7wto4gxhAO/ErZEtOXyEZEmnIHQfl0Dt1QQSB4QV0iP6BZ9/YB5fZaHFQ2dwHFrmPaRQ9GGMX01k9Q=="],
 
+    "hono": ["hono@4.7.9", "", {}, "sha512-/EsCoR5h7N4yu01TDu9GMCCJa6ZLk5ZJIWFFGNawAXmd1Tp53+Wir4xm0D2X19bbykWUlzQG0+BvPAji6p9E8Q=="],
+
     "proxy": ["proxy@workspace:packages/proxy"],
 
-    "testipd": ["testipd@workspace:packages/testipd"],
+    "testidp": ["testidp@workspace:packages/testidp"],
 
     "testsp": ["testsp@workspace:packages/testsp"],
 

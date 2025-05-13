@@ -5,6 +5,6 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "overmind start"
+    "dev": "overmind start -p 7272 -P 10"
   }
 }
