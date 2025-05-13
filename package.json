@@ -1,0 +1,10 @@
+{
+  "name": "samlproxy",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "overmind start"
+  }
+}
