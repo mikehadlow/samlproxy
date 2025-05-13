@@ -1,11 +1,8 @@
 {
-  "name": "proxy",
-  "module": "index.ts",
+  "name": "common",
+  "module": "src/index.ts",
   "type": "module",
   "private": true,
-  "scripts": {
-    "dev": "bun run src/index.ts"
-  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -13,7 +10,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "common": "workspace:*",
-    "hono": "^4.7.9"
+    "samlify": "^2.10.0"
   }
 }

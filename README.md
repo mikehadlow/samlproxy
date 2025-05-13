@@ -1,6 +1,14 @@
 # samlproxy
 An an example implementation of a SAML IdP Proxy
 
+## TODO:
+1. ~~Setup multi-package bun project.~~ DONE
+1. ~~Setup Hono server for each project.~~ DONE
+1. ~~Introduce common package~~ DONE
+1. ~~Install Samilify.~~ DONE
+1. Super basic TestSp talking to super basic TestIdP.
+1. Configure with SQL Lite.
+
 ## Development
 SamlProxy uses bun. Install bun by following the instructions on the [bun website](https://bun.sh/docs/installation)
 
@@ -23,7 +31,3 @@ Overmind will start all three processes at the following URLs:
 proxy  <http://localhost:7272>
 sp     <http://localhost:7282>
 idp    <http://localhost:7292>
-
-## TODO:
-1. Setup multi-package bun project. DONE
-1. Setup Hono server for each project.
