@@ -2,7 +2,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "common": ["packages/common/src/index.ts"]
+      "common": ["packages/common/src/index.ts"],
+      "common/result": ["packages/common/src/result.ts"]
     },
 
     // Environment setup & latest features

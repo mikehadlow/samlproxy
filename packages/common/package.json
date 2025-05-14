@@ -1,5 +1,9 @@
 {
   "name": "common",
+  "exports": {
+    ".": "./src/index.ts",
+    "./result": "./src/result.ts"
+  },
   "module": "src/index.ts",
   "type": "module",
   "private": true,
