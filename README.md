@@ -6,6 +6,8 @@ An an example implementation of a SAML IdP Proxy
 1. ~~Setup Hono server for each project.~~ DONE
 1. ~~Introduce common package~~ DONE
 1. ~~Install Samilify.~~ DONE
+1. Result type with tests.
+1. Setup ESLint?
 1. Super basic TestSp talking to super basic TestIdP.
 1. Configure with SQL Lite.
 
