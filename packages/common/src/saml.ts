@@ -32,9 +32,16 @@ export type AuthnRequest = {
   url: string,
 }
 
-export const generateAuthnRequest = (connection: IdpConnection): AuthnRequest => {
+export const generateAuthnRequest = (args: { connection: IdpConnection, relayState: string }): AuthnRequest => {
+  const connection = args.connection
+  const relayState = args.relayState
   const sp = samlify.ServiceProvider({
     entityID: connection.spEntityId,
+    relayState,
+    assertionConsumerService: [{
+      Binding: samlify.Constants.BindingNamespace.Post,
+      Location: connection.spAcsUrl,
+    }]
   })
   const idp = samlify.IdentityProvider({
     entityID: connection.idpEntityId,
