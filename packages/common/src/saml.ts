@@ -32,6 +32,21 @@ export type AuthnRequest = {
   url: string,
 }
 
+export type AuthnRequestDetails = {
+  id: string,
+  issuer: string,
+}
+
+// TODO: setup schema validator
+samlify.setSchemaValidator({
+  validate: (_response: string) => {
+    // Just skip validation for now
+    return Promise.resolve('skipped');
+  }
+})
+
+// Generates a SAML AuthnRequest URL from the given IdPConnection with the given relayState
+// Assumes redirect binding
 export const generateAuthnRequest = (args: { connection: IdpConnection, relayState: string }): AuthnRequest => {
   const connection = args.connection
   const relayState = args.relayState
@@ -58,5 +73,34 @@ export const generateAuthnRequest = (args: { connection: IdpConnection, relaySta
   const { context } = sp.createLoginRequest(idp, 'redirect')
   return {
     url: context,
+  }
+}
+
+export const parseAuthnRequest = async (args: { connection: SpConnection, authnRequest: string }): Promise<AuthnRequestDetails> => {
+  const connection = args.connection
+  const authnRequest = args.authnRequest
+  const sp = samlify.ServiceProvider({
+    entityID: connection.spEntityId,
+    assertionConsumerService: [{
+      Binding: samlify.Constants.BindingNamespace.Post,
+      Location: connection.spAcsUrl,
+    }]
+  })
+  const idp = samlify.IdentityProvider({
+    entityID: connection.idpEntityId,
+    singleSignOnService: [{
+      Binding: samlify.Constants.BindingNamespace.Redirect,
+      Location: connection.idpSsoUrl,
+    }],
+    // Samlify expects this even though we don't need it here.
+    singleLogoutService: [{
+      Binding: samlify.Constants.BindingNamespace.Redirect,
+      Location: connection.idpSsoUrl,
+    }],
+  })
+  const { extract } = await idp.parseLoginRequest(sp, 'redirect', { query: { SAMLRequest: authnRequest }});
+  return {
+    id: extract.request.id,
+    issuer: extract.issuer,
   }
 }
