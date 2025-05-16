@@ -11,6 +11,9 @@ An an example implementation of a SAML IdP Proxy
 1. Super basic TestSp talking to super basic TestIdP.
 1. Configure with SQL Lite.
 
+## Useful links
+
+
 ## Development
 SamlProxy uses bun. Install bun by following the instructions on the [bun website](https://bun.sh/docs/installation)
 
@@ -30,6 +33,8 @@ Start with:
 bun run dev
 ```
 Overmind will start all three processes at the following URLs:
-proxy  <http://localhost:7272>
-sp     <http://localhost:7282>
-idp    <http://localhost:7292>
+
+|---|---|
+| proxy | <http://localhost:7272> |
+| sp    | <http://localhost:7282> |
+| idp   | <http://localhost:7292> |
