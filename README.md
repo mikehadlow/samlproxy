@@ -34,6 +34,7 @@ bun run dev
 ```
 Overmind will start all three processes at the following URLs:
 
+| process | URL |
 |---|---|
 | proxy | <http://localhost:7272> |
 | sp    | <http://localhost:7282> |
