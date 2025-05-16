@@ -1,4 +1,5 @@
 import * as samlify from "samlify"
+import * as r from "./result"
 
 // This file declares two entities, an idpConnection, and an spConnection.
 
@@ -35,6 +36,9 @@ export type AuthnRequest = {
 export type AuthnRequestDetails = {
   id: string,
   issuer: string,
+  acsUrl: string,
+  ssoUrl: string,
+  issueInstant: Date
 }
 
 // TODO: setup schema validator
@@ -76,31 +80,28 @@ export const generateAuthnRequest = (args: { connection: IdpConnection, relaySta
   }
 }
 
-export const parseAuthnRequest = async (args: { connection: SpConnection, authnRequest: string }): Promise<AuthnRequestDetails> => {
-  const connection = args.connection
-  const authnRequest = args.authnRequest
-  const sp = samlify.ServiceProvider({
-    entityID: connection.spEntityId,
-    assertionConsumerService: [{
-      Binding: samlify.Constants.BindingNamespace.Post,
-      Location: connection.spAcsUrl,
-    }]
-  })
-  const idp = samlify.IdentityProvider({
-    entityID: connection.idpEntityId,
-    singleSignOnService: [{
-      Binding: samlify.Constants.BindingNamespace.Redirect,
-      Location: connection.idpSsoUrl,
-    }],
-    // Samlify expects this even though we don't need it here.
-    singleLogoutService: [{
-      Binding: samlify.Constants.BindingNamespace.Redirect,
-      Location: connection.idpSsoUrl,
-    }],
-  })
-  const { extract } = await idp.parseLoginRequest(sp, 'redirect', { query: { SAMLRequest: authnRequest }});
-  return {
-    id: extract.request.id,
-    issuer: extract.issuer,
+export const parseAuthnRequest = (args: { authnRequest: string }): r.Result<AuthnRequestDetails> => {
+  try {
+    const authnRequest = args.authnRequest
+    const xml = samlify.Utility.inflateString(authnRequest)
+    const properties = samlify.Extractor.extract(xml, samlify.Extractor.loginRequestFields)
+    if (typeof properties.issuer !== "string" ||
+      typeof properties.request !== "object" ||
+      typeof properties.request.id !== "string" ||
+      typeof properties.request.assertionConsumerServiceUrl !== "string" ||
+      typeof properties.request.destination !== "string" ||
+      typeof properties.request.issueInstant !== "string") {
+      return r.fail("Malformed AuthnRequest")
+    }
+    return r.from({
+      id: properties.request.id,
+      issuer: properties.issuer,
+      acsUrl: properties.request.assertionConsumerServiceUrl,
+      ssoUrl: properties.request.destination,
+      issueInstant: new Date(properties.request.issueInstant),
+    })
+  }
+  catch (e) {
+    return r.fail("Malformed AuthnRequest")
   }
 }
