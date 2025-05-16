@@ -12,6 +12,9 @@ An an example implementation of a SAML IdP Proxy
 1. Configure with SQL Lite.
 
 ## Useful links
+* [SAML Technical Spec](https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0-cd-02.html)
+* [SAML XML Entity Spec](https://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf)
+* [Samlify Docs](https://samlify.js.org/#/?id=samlify)
 
 
 ## Development
