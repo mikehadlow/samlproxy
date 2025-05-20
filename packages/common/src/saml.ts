@@ -163,6 +163,7 @@ export const generateAssertion = async (args: {
     }],
     loginResponseTemplate: {
       context: template.assertionTemplate,
+      attributes: [],
     },
   })
   const { id, context } = await idp.createLoginResponse(
