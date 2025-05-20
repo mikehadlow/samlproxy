@@ -2,6 +2,7 @@ import * as saml from "./saml"
 import * as samlify from "samlify"
 import { expect, test, describe } from "bun:test"
 import * as r from "./result"
+import * as assets from "./test-assets"
 
 describe("saml", () => {
   test("generateAuthnRequest should work", () => {
@@ -11,7 +12,7 @@ describe("saml", () => {
       spAcsUrl: "https://www.example-sp.com/acs",
       idpEntityId: "the-idp-entity-id",
       idpSsoUrl: "https://www.example-idp.com/sso",
-      cert: "not relevant for generating authnRequest",
+      publicKey: "not relevant for generating authnRequest",
     }
     const relayState = "the-relay-state"
 
@@ -81,5 +82,34 @@ describe("saml", () => {
     expect(r.isFail(result)).toBeTrue()
     if(r.isOk(result)) return
     expect(result.message).toEqual("Malformed AuthnRequest")
+  })
+
+  test("generateAssertion should work", async () => {
+    // arrange
+    const connection: saml.SpConnection = {
+      spEntityId: "the-sp-entity-id",
+      spAcsUrl: "https://www.example-sp.com/acs",
+      idpEntityId: "the-idp-entity-id",
+      idpSsoUrl: "https://www.example-idp.com/sso",
+      privateKey: assets.testPrivateKey,
+      privateKeyPassword: assets.testPrivateKeyPassword,
+      signingCertificate: assets.testPublicKey,
+    }
+    const user: saml.User = {
+      email: "leo@hadlow.com"
+    }
+    const relayState = "the-relay-state"
+    const requestId = "the-reqeust-id"
+
+    // act
+    const result = await saml.generateAssertion({ connection, requestId, relayState, user })
+
+    // assert
+    expect(result.acsUrl).toEqual(connection.spAcsUrl)
+    expect(result.relayState).toEqual(relayState)
+    const xml = samlify.Utility.base64Decode(result.assertion, false)
+    if(typeof xml !== "string") throw Error("Expected string here")
+    const properties = samlify.Extractor.extract(xml, samlify.Extractor.loginResponseFields(null))
+    console.log("xml properties", JSON.stringify(properties, null, 2))
   })
 })
