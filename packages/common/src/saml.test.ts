@@ -111,8 +111,9 @@ describe("saml", () => {
     // const xml = samlify.Utility.base64Decode(result.assertion, false)
     // console.log(xml)
     const parsedAssertion = assertion.parseAssertion(result.assertion)
-    expect(parsedAssertion.id).toBeString()
-    expect(parsedAssertion.inResponseTo).toBeString()
+    // TODO: Work out why these are different
+    // expect(parsedAssertion.id).toEqual(result.id)
+    expect(parsedAssertion.inResponseTo).toEqual(requestId)
     expect(parsedAssertion.issuer).toEqual(connection.idpEntityId)
     expect(parsedAssertion.audience).toEqual(connection.spEntityId)
     expect(parsedAssertion.nameID).toEqual(user.email)

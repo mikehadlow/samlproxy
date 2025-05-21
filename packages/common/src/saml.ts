@@ -171,7 +171,7 @@ export const generateAssertion = async (args: {
     { extract: { request: { id: requestId } } }, // request info
     'post', // binding
     user,
-    createTemplateCallback(idp, sp, samlify.Constants.BindingNamespace.Post, user),
+    createTemplateCallback(idp, sp, samlify.Constants.BindingNamespace.Post, user, requestId),
     false, // encryptThenSign
     relayState
   )
@@ -187,21 +187,21 @@ const createTemplateCallback = (
   idp: samlify.IdentityProviderInstance,
   sp: samlify.ServiceProviderInstance,
   binding: string,
-  user: User
+  user: User,
+  requestId: string,
 ) => (template: string) => {
-  const id =  '_8e8dc5f69a98cc4c1ff3427e5ce34606fd672f91e6';
+  const id = `_${crypto.randomUUID()}`;
   const now = new Date();
   const spEntityID = sp.entityMeta.getEntityID();
-  const idpSetting = idp.entitySetting;
   const fiveMinutesLater = new Date(now.getTime());
   fiveMinutesLater.setMinutes(fiveMinutesLater.getMinutes() + 5);
   const tvalue = {
     ID: id,
-    AssertionID: idpSetting.generateID ? idpSetting.generateID() : `${crypto.randomUUID()}`,
+    AssertionID: id,
     Destination: sp.entityMeta.getAssertionConsumerService(binding),
     Audience: spEntityID,
     SubjectRecipient: spEntityID,
-    NameIDFormat: 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
+    NameIDFormat: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
     NameID: user.email,
     Issuer: idp.entityMeta.getEntityID(),
     IssueInstant: now.toISOString(),
@@ -210,10 +210,8 @@ const createTemplateCallback = (
     SubjectConfirmationDataNotOnOrAfter: fiveMinutesLater.toISOString(),
     AssertionConsumerServiceURL: sp.entityMeta.getAssertionConsumerService(binding),
     EntityID: spEntityID,
-    InResponseTo: '_4606cc1f427fa981e6ffd653ee8d6972fc5ce398c4',
-    StatusCode: 'urn:oasis:names:tc:SAML:2.0:status:Success',
-    attrUserEmail: 'myemailassociatedwithsp@sp.com',
-    attrUserName: 'mynameinsp',
+    InResponseTo: requestId,
+    StatusCode: "urn:oasis:names:tc:SAML:2.0:status:Success",
   };
   return {
     id: id,
