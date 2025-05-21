@@ -14,6 +14,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "fast-xml-parser": "^5.2.3",
     "samlify": "^2.10.0"
   }
 }
