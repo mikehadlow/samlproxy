@@ -3,6 +3,7 @@ import * as samlify from "samlify"
 import { expect, test, describe } from "bun:test"
 import * as r from "./result"
 import * as assets from "./test-assets"
+import * as assertion from "./assertion"
 
 describe("saml", () => {
   test("generateAuthnRequest should work", () => {
@@ -107,9 +108,18 @@ describe("saml", () => {
     // assert
     expect(result.acsUrl).toEqual(connection.spAcsUrl)
     expect(result.relayState).toEqual(relayState)
-    const xml = samlify.Utility.base64Decode(result.assertion, false)
-    if(typeof xml !== "string") throw Error("Expected string here")
-    const properties = samlify.Extractor.extract(xml, samlify.Extractor.loginResponseFields(null))
-    console.log("xml properties", JSON.stringify(properties, null, 2))
+    // const xml = samlify.Utility.base64Decode(result.assertion, false)
+    const parsedAssertion = assertion.parseAssertion(result.assertion)
+    expect(parsedAssertion.id).toBeString()
+    expect(parsedAssertion.inResponseTo).toBeString()
+    expect(parsedAssertion.issuer).toEqual(connection.idpEntityId)
+    expect(parsedAssertion.audience).toEqual(connection.spEntityId)
+    expect(parsedAssertion.nameID).toEqual(user.email)
+    const now = new Date()
+    expect(parsedAssertion.issueInstant).toBeValidDate()
+    expect(parsedAssertion.notBefore).toBeValidDate()
+    expect(parsedAssertion.notOnOrAfter).toBeValidDate()
+    expect(now > parsedAssertion.notBefore).toBeTrue()
+    expect(now < parsedAssertion.notOnOrAfter).toBeTrue()
   })
 })
