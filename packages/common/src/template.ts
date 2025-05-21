@@ -20,6 +20,6 @@ export const assertionTemplate = `<samlp:Response
 			<saml:AudienceRestriction>
 				<saml:Audience>{Audience}</saml:Audience>
 			</saml:AudienceRestriction>
-		</saml:Conditions>{AuthnStatement}{AttributeStatement}
+		</saml:Conditions>
 	</saml:Assertion>
 </samlp:Response>`

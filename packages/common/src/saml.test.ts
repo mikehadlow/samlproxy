@@ -109,6 +109,7 @@ describe("saml", () => {
     expect(result.acsUrl).toEqual(connection.spAcsUrl)
     expect(result.relayState).toEqual(relayState)
     // const xml = samlify.Utility.base64Decode(result.assertion, false)
+    // console.log(xml)
     const parsedAssertion = assertion.parseAssertion(result.assertion)
     expect(parsedAssertion.id).toBeString()
     expect(parsedAssertion.inResponseTo).toBeString()
