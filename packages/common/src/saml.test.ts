@@ -4,11 +4,13 @@ import { expect, test, describe } from "bun:test"
 import * as r from "./result"
 import * as assets from "./test-assets"
 import * as assertion from "./assertion"
+import * as e from "./entity"
+
 
 describe("saml", () => {
   test("generateAuthnRequest should work", () => {
     // arrange
-    const connection: saml.IdpConnection = {
+    const connection: e.IdpConnection = {
       spEntityId: "the-sp-entity-id",
       spAcsUrl: "https://www.example-sp.com/acs",
       idpEntityId: "the-idp-entity-id",
@@ -87,7 +89,7 @@ describe("saml", () => {
 
   test("generateAssertion should work", async () => {
     // arrange
-    const connection: saml.SpConnection = {
+    const connection: e.SpConnection = {
       spEntityId: "the-sp-entity-id",
       spAcsUrl: "https://www.example-sp.com/acs",
       idpEntityId: "the-idp-entity-id",
@@ -96,7 +98,7 @@ describe("saml", () => {
       privateKeyPassword: assets.testPrivateKeyPassword,
       signingCertificate: assets.testPublicKey,
     }
-    const user: saml.User = {
+    const user: e.User = {
       email: "leo@hadlow.com"
     }
     const relayState = "the-relay-state"
@@ -117,6 +119,7 @@ describe("saml", () => {
     expect(parsedAssertion.issuer).toEqual(connection.idpEntityId)
     expect(parsedAssertion.audience).toEqual(connection.spEntityId)
     expect(parsedAssertion.nameID).toEqual(user.email)
+    expect(parsedAssertion.destination).toEqual(connection.spAcsUrl)
     const now = new Date()
     expect(parsedAssertion.issueInstant).toBeValidDate()
     expect(parsedAssertion.notBefore).toBeValidDate()

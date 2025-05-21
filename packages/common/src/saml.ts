@@ -1,60 +1,8 @@
 import * as samlify from "samlify"
 import * as r from "./result"
-import * as crypto from "crypto"
 import * as template from "./template"
-
-// This file declares two entities, an idpConnection, and an spConnection.
-
-// An idpConnection encapsulates an SP's connection to an IdP. So it is responsible
-// for creating the intial SP-initiated AuthnRequest, and also for consuming
-// the Assertion returned by the IdP at the Assertion Consumer Service endpoint.
-export type IdpConnection = {
-  // SP (my) properties
-  spEntityId: string,
-  spAcsUrl: string,
-  // IdP (their) properties
-  idpEntityId: string,
-  idpSsoUrl: string,
-  publicKey: string,
-}
-
-// An spConnection encapsulates an IdP's connection to an SP. So it is responsible
-// for consuming an SP-initiated AuthnRequest, authenticating the principle, and
-// constructing and signing the assertion.
-export type SpConnection = {
-  // IdP (my) properties
-  idpEntityId: string,
-  idpSsoUrl: string,
-  privateKey: string,
-  privateKeyPassword: string,
-  signingCertificate: string,
-  // SP (their) properties
-  spEntityId: string,
-  spAcsUrl: string,
-}
-
-export type AuthnRequest = {
-  url: string,
-}
-
-export type AuthnRequestDetails = {
-  id: string,
-  issuer: string,
-  acsUrl: string,
-  ssoUrl: string,
-  issueInstant: Date
-}
-
-export type Assertion = {
-  id: string,
-  assertion: string,
-  acsUrl: string,
-  relayState: string,
-}
-
-export type User = {
-  email: string,
-}
+import * as e from "./entity"
+import * as assertion from "./assertion"
 
 // TODO: setup schema validator
 samlify.setSchemaValidator({
@@ -66,7 +14,7 @@ samlify.setSchemaValidator({
 
 // Generates a SAML AuthnRequest URL from the given IdPConnection with the given relayState
 // Assumes redirect binding
-export const generateAuthnRequest = (args: { connection: IdpConnection, relayState: string }): AuthnRequest => {
+export const generateAuthnRequest = (args: { connection: e.IdpConnection, relayState: string }): e.AuthnRequest => {
   const {
     connection,
     relayState,
@@ -97,7 +45,7 @@ export const generateAuthnRequest = (args: { connection: IdpConnection, relaySta
   }
 }
 
-export const parseAuthnRequest = (args: { authnRequest: string }): r.Result<AuthnRequestDetails> => {
+export const parseAuthnRequest = (args: { authnRequest: string }): r.Result<e.AuthnRequestDetails> => {
   try {
     const { authnRequest } = args
     const xml = samlify.Utility.inflateString(authnRequest)
@@ -124,11 +72,11 @@ export const parseAuthnRequest = (args: { authnRequest: string }): r.Result<Auth
 }
 
 export const generateAssertion = async (args: {
-    connection: SpConnection,
+    connection: e.SpConnection,
     requestId: string,
     relayState: string,
-    user: User,
-  }): Promise<Assertion> => {
+    user: e.User,
+  }): Promise<e.Assertion> => {
   const {
     connection,
     relayState,
@@ -171,7 +119,7 @@ export const generateAssertion = async (args: {
     { extract: { request: { id: requestId } } }, // request info
     'post', // binding
     user,
-    createTemplateCallback(idp, sp, samlify.Constants.BindingNamespace.Post, user, requestId),
+    assertion.createTemplateCallback(connection, user, requestId),
     false, // encryptThenSign
     relayState
   )
@@ -182,39 +130,3 @@ export const generateAssertion = async (args: {
     relayState,
   }
 }
-
-const createTemplateCallback = (
-  idp: samlify.IdentityProviderInstance,
-  sp: samlify.ServiceProviderInstance,
-  binding: string,
-  user: User,
-  requestId: string,
-) => (template: string) => {
-  const id = `_${crypto.randomUUID()}`;
-  const now = new Date();
-  const spEntityID = sp.entityMeta.getEntityID();
-  const fiveMinutesLater = new Date(now.getTime());
-  fiveMinutesLater.setMinutes(fiveMinutesLater.getMinutes() + 5);
-  const tvalue = {
-    ID: id,
-    AssertionID: id,
-    Destination: sp.entityMeta.getAssertionConsumerService(binding),
-    Audience: spEntityID,
-    SubjectRecipient: spEntityID,
-    NameIDFormat: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-    NameID: user.email,
-    Issuer: idp.entityMeta.getEntityID(),
-    IssueInstant: now.toISOString(),
-    ConditionsNotBefore: now.toISOString(),
-    ConditionsNotOnOrAfter: fiveMinutesLater.toISOString(),
-    SubjectConfirmationDataNotOnOrAfter: fiveMinutesLater.toISOString(),
-    AssertionConsumerServiceURL: sp.entityMeta.getAssertionConsumerService(binding),
-    EntityID: spEntityID,
-    InResponseTo: requestId,
-    StatusCode: "urn:oasis:names:tc:SAML:2.0:status:Success",
-  };
-  return {
-    id: id,
-    context: samlify.SamlLib.replaceTagsByValue(template, tvalue),
-  };
-};
