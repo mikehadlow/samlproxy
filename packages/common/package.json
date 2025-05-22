@@ -2,7 +2,8 @@
   "name": "common",
   "exports": {
     ".": "./src/index.ts",
-    "./result": "./src/result.ts"
+    "./result": "./src/result.ts",
+    "./saml": "./src/saml.ts"
   },
   "module": "src/index.ts",
   "type": "module",
