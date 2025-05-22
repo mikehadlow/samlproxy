@@ -41,4 +41,9 @@ app.post("/login", async (c) => {
   return c.redirect(result.url)
 })
 
+app.post("/acs", (c) => {
+  // TODO validate SAML assertion
+  return c.text("Logged in")
+})
+
 export default app
