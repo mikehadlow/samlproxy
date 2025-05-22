@@ -5,6 +5,7 @@ import * as assertion from "./assertion"
 import * as fs from "fs"
 import * as path from "path"
 
+export * from "./entity"
 
 // TODO: setup schema validator
 samlify.setSchemaValidator({
