@@ -86,9 +86,6 @@ export const generateAssertion = async (args: {
   const sp = samlify.ServiceProvider({
     entityID: connection.spEntityId,
     relayState,
-    // signingCert: connection.signingCertificate,
-    // wantAssertionsSigned: true,
-    // wantMessageSigned: true,
     assertionConsumerService: [{
       Binding: samlify.Constants.BindingNamespace.Post,
       Location: connection.spAcsUrl,
@@ -128,5 +125,57 @@ export const generateAssertion = async (args: {
     assertion: context,
     acsUrl: connection.spAcsUrl,
     relayState,
+  }
+}
+
+export const validateAssertion = async (args: {
+  connection: e.IdpConnection,
+  encodedAssertion: string,
+}): Promise<r.Result<boolean>> => {
+  const {
+    connection,
+    encodedAssertion,
+  } = args
+  const sp = samlify.ServiceProvider({
+    entityID: connection.spEntityId,
+    assertionConsumerService: [{
+      Binding: samlify.Constants.BindingNamespace.Post,
+      Location: connection.spAcsUrl,
+    }]
+  })
+  const idp = samlify.IdentityProvider({
+    entityID: connection.idpEntityId,
+    signingCert: connection.signingCertificate,
+    isAssertionEncrypted: false,
+    singleSignOnService: [{
+      Binding: samlify.Constants.BindingNamespace.Redirect,
+      Location: connection.idpSsoUrl,
+    }],
+    // Samlify expects this even though we don't need it here.
+    singleLogoutService: [{
+      Binding: samlify.Constants.BindingNamespace.Redirect,
+      Location: connection.idpSsoUrl,
+    }],
+    loginResponseTemplate: {
+      context: template.assertionTemplate,
+      attributes: [],
+    },
+  })
+  const request = {
+    body: {
+      SAMLResponse: encodedAssertion,
+    }
+  }
+  try {
+    await sp.parseLoginResponse(idp, 'post', request);
+    return r.from(true)
+  }
+  catch (error) {
+    console.error(error)
+    if (error instanceof Error) {
+      console.error(error.message)
+      return r.fail(error.message)
+    }
+    return r.fail(`Error: ${error}`)
   }
 }

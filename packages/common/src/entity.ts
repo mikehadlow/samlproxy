@@ -9,7 +9,7 @@ export type IdpConnection = {
   // IdP (their) properties
   idpEntityId: string,
   idpSsoUrl: string,
-  publicKey: string,
+  signingCertificate: string,
 }
 
 // An spConnection encapsulates an IdP's connection to an SP. So it is responsible

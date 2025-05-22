@@ -15,7 +15,7 @@ describe("saml", () => {
       spAcsUrl: "https://www.example-sp.com/acs",
       idpEntityId: "the-idp-entity-id",
       idpSsoUrl: "https://www.example-idp.com/sso",
-      publicKey: "not relevant for generating authnRequest",
+      signingCertificate: "not relevant for generating authnRequest",
     }
     const relayState = "the-relay-state"
 
@@ -126,5 +126,36 @@ describe("saml", () => {
     expect(parsedAssertion.notOnOrAfter).toBeValidDate()
     expect(now > parsedAssertion.notBefore).toBeTrue()
     expect(now < parsedAssertion.notOnOrAfter).toBeTrue()
+  })
+
+  test("validateAssertion should work", async () => {
+    const connectionCommon = {
+      spEntityId: "the-sp-entity-id",
+      spAcsUrl: "https://www.example-sp.com/acs",
+      idpEntityId: "the-idp-entity-id",
+      idpSsoUrl: "https://www.example-idp.com/sso",
+      signingCertificate: assets.testPublicKey,
+    }
+    const spConnection: e.SpConnection = {
+      ...connectionCommon,
+      privateKey: assets.testPrivateKey,
+      privateKeyPassword: assets.testPrivateKeyPassword,
+    }
+    const user: e.User = {
+      email: "leo@hadlow.com"
+    }
+    const relayState = "the-relay-state"
+    const requestId = "the-reqeust-id"
+    const assertionResult = await saml.generateAssertion({ connection: spConnection, requestId, relayState, user })
+    const idpConnection: e.IdpConnection = {
+      ...connectionCommon,
+    }
+
+    // act
+    const result = await saml.validateAssertion({
+      connection: idpConnection,
+      encodedAssertion: assertionResult.assertion,
+    })
+    expect(r.isOk(result)).toBeTrue()
   })
 })

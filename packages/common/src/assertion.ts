@@ -49,7 +49,7 @@ export const createTemplateCallback = (
   fiveMinutesLater.setMinutes(fiveMinutesLater.getMinutes() + 5)
   const tvalue = {
     ID: id,
-    AssertionID: id,
+    AssertionID:  `_${crypto.randomUUID()}`,
     Destination: connection.spAcsUrl,
     Audience: connection.spEntityId,
     SubjectRecipient: connection.spEntityId,
