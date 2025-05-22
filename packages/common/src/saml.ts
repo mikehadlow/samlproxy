@@ -1,8 +1,10 @@
 import * as samlify from "samlify"
 import * as r from "./result"
-import * as template from "./template"
 import * as e from "./entity"
 import * as assertion from "./assertion"
+import * as fs from "fs"
+import * as path from "path"
+
 
 // TODO: setup schema validator
 samlify.setSchemaValidator({
@@ -83,6 +85,7 @@ export const generateAssertion = async (args: {
     requestId,
     user,
   } = args
+  const assertionTemplate = fs.readFileSync(path.join(__dirname, 'assertion-template.xml'), 'utf8')
   const sp = samlify.ServiceProvider({
     entityID: connection.spEntityId,
     relayState,
@@ -107,7 +110,7 @@ export const generateAssertion = async (args: {
       Location: connection.idpSsoUrl,
     }],
     loginResponseTemplate: {
-      context: template.assertionTemplate,
+      context: assertionTemplate,
       attributes: [],
     },
   })
@@ -156,10 +159,6 @@ export const validateAssertion = async (args: {
       Binding: samlify.Constants.BindingNamespace.Redirect,
       Location: connection.idpSsoUrl,
     }],
-    loginResponseTemplate: {
-      context: template.assertionTemplate,
-      attributes: [],
-    },
   })
   const request = {
     body: {

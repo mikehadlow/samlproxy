@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser"
 import * as samlify from "samlify"
 import * as e from "./entity"
+import Mustache from "mustache"
 
 export type Assertion = {
   id: string
@@ -67,6 +68,6 @@ export const createTemplateCallback = (
   }
   return {
     id: id,
-    context: samlify.SamlLib.replaceTagsByValue(template, tvalue),
+    context: Mustache.render(template, tvalue),
   }
 }
