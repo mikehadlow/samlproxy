@@ -13,6 +13,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
     "common": "workspace:*",
     "hono": "^4.7.9",
     "jsonwebtoken": "^9.0.2",

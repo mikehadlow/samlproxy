@@ -5,6 +5,7 @@ import * as path from "path"
 import * as saml from "common/saml"
 import { z } from "zod"
 import * as r from "common/result"
+import * as jwt from "jsonwebtoken"
 
 const connection: saml.IdpConnection = {
   // SP (my) properties
