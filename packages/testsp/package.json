@@ -15,6 +15,7 @@
   "dependencies": {
     "common": "workspace:*",
     "hono": "^4.7.9",
+    "jsonwebtoken": "^9.0.2",
     "zod": "^3.25.20"
   }
 }
