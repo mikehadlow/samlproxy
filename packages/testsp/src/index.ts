@@ -4,6 +4,7 @@ import * as fs from "fs"
 import * as path from "path"
 import * as saml from "common/saml"
 import { z } from "zod"
+import * as r from "common/result"
 
 const connection: saml.IdpConnection = {
   // SP (my) properties
@@ -50,6 +51,11 @@ const loginForm = z.object({
   username: z.string().email(),
 })
 
+const assertionForm = z.object({
+  SAMLResponse: z.string(),
+  RelayState: z.string(),
+})
+
 const app = new Hono()
 app.use(logger())
 
@@ -72,9 +78,23 @@ app.post("/login", async (c) => {
   return c.redirect(result.url)
 })
 
-app.post("/acs", (c) => {
-  // TODO validate SAML assertion
-  return c.text("SP Logged in")
+app.post("/acs", async (c) => {
+  const body = await c.req.parseBody()
+  const form = assertionForm.parse(body)
+  const assertionExtract = saml.parseAssertion(form.SAMLResponse)
+
+  // TODO: Here we can lookup the correct connection for this Assertion
+  console.log("Assertion from IdP: ", assertionExtract.issuer)
+
+  const result = await saml.validateAssertion({ connection, encodedAssertion: form.SAMLResponse })
+  if (r.isOk(result)) {
+    // TODO: issue JWT
+    return c.text(`SP Logged in as ${assertionExtract.nameID}`)
+  }
+  else {
+    console.log(`SP Error validating assertion: ${result.message}`)
+    return c.text("Login failed")
+  }
 })
 
 export default app
