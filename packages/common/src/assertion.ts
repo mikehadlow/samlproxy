@@ -1,49 +1,16 @@
-import { XMLParser } from "fast-xml-parser"
-import * as samlify from "samlify"
 import * as e from "./entity"
 import Mustache from "mustache"
 
-export type Assertion = {
-  id: string
-  inResponseTo: string
-  issuer: string
-  audience: string
-  issueInstant: Date
-  nameID: string
-  notBefore: Date
-  notOnOrAfter: Date
-  destination: string
-}
-
-export const parseAssertion = (base64Assertion: string): Assertion => {
-  const xml = samlify.Utility.base64Decode(base64Assertion, false)
-  const parser = new XMLParser({
-    ignoreAttributes: false,
-    attributeNamePrefix: "@_",
-    allowBooleanAttributes: true,
-    parseAttributeValue: true,
-    trimValues: true,
-    removeNSPrefix: true
-  })
-  const properties = parser.parse(xml)
-  return {
-    id: properties["Response"]["@_ID"],
-    inResponseTo: properties["Response"]["@_InResponseTo"],
-    issuer: properties["Response"]["Issuer"],
-    audience: properties["Response"]["Assertion"]["Conditions"]["AudienceRestriction"]["Audience"],
-    issueInstant: new Date(properties["Response"]["@_IssueInstant"]),
-    nameID: properties["Response"]["Assertion"]["Subject"]["NameID"]["#text"],
-    notBefore: new Date(properties["Response"]["Assertion"]["Conditions"]["@_NotBefore"]),
-    notOnOrAfter: new Date(properties["Response"]["Assertion"]["Conditions"]["@_NotOnOrAfter"]),
-    destination: properties["Response"]["@_Destination"]
-  }
-}
-
-export const createTemplateCallback = (
+export const createTemplateCallback = (args: {
   connection: e.SpConnection,
   user: e.User,
   requestId: string,
-) => (template: string) => {
+}) => (template: string) => {
+  const {
+    connection,
+    user,
+    requestId,
+  } = args
   const id = `_${crypto.randomUUID()}`
   const now = new Date()
   const fiveMinutesLater = new Date(now.getTime())

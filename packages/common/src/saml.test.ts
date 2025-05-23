@@ -5,7 +5,8 @@ import * as r from "./result"
 import * as assets from "./test-assets"
 import * as assertion from "./assertion"
 import * as e from "./entity"
-
+import * as fs from "fs"
+import * as path from "path"
 
 describe("saml", () => {
   test("generateAuthnRequest should work", () => {
@@ -112,7 +113,7 @@ describe("saml", () => {
     expect(result.relayState).toEqual(relayState)
     // const xml = samlify.Utility.base64Decode(result.assertion, false)
     // console.log(xml)
-    const parsedAssertion = assertion.parseAssertion(result.assertion)
+    const parsedAssertion = saml.parseAssertion(result.assertion)
     // TODO: Work out why these are different
     // expect(parsedAssertion.id).toEqual(result.id)
     expect(parsedAssertion.inResponseTo).toEqual(requestId)
@@ -158,4 +159,38 @@ describe("saml", () => {
     })
     expect(r.isOk(result)).toBeTrue()
   })
+
+  test("parseAssertion should parse assertion", () => {
+    // arrange
+    const connection: e.SpConnection = {
+      idpEntityId: "the-idp-entity-id",
+      idpSsoUrl: "https://www.idp.com/sso",
+      privateKey: "the-long-private-key-string",
+      privateKeyPassword: "some-password",
+      signingCertificate: "the-long-cert-string",
+      spEntityId: "the-sp-entity-id",
+      spAcsUrl: "https://www.sp.com/acs",
+    }
+    const user: e.User = {
+      email: "hello@fubar.com"
+    }
+    const requestId = "the-request-id"
+    const assertionTemplate = fs.readFileSync(path.join(__dirname, 'assertion-template.xml'), 'utf8')
+    const result = assertion.createTemplateCallback({ connection, user, requestId })(assertionTemplate)
+    const base64Asssertion = btoa(result.context)
+
+    // act
+    const parsedAssertion = saml.parseAssertion(base64Asssertion)
+
+    // assert
+    expect(true).toBe(true);
+    expect(parsedAssertion.id).toBeString()
+    expect(parsedAssertion.inResponseTo).toEqual(requestId)
+    expect(parsedAssertion.issuer).toEqual(connection.idpEntityId)
+    expect(parsedAssertion.audience).toEqual(connection.spEntityId)
+    expect(parsedAssertion.issueInstant).toBeDate()
+    expect(parsedAssertion.nameID).toEqual(user.email)
+    expect(parsedAssertion.notBefore).toBeDate()
+    expect(parsedAssertion.notOnOrAfter).toBeDate()
+  });
 })

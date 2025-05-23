@@ -46,6 +46,18 @@ export type Assertion = {
   relayState: string,
 }
 
+export type AssertionExtract = {
+  id: string
+  inResponseTo: string
+  issuer: string
+  audience: string
+  issueInstant: Date
+  nameID: string
+  notBefore: Date
+  notOnOrAfter: Date
+  destination: string
+}
+
 export type User = {
   email: string,
 }

@@ -4,6 +4,7 @@ import * as e from "./entity"
 import * as assertion from "./assertion"
 import * as fs from "fs"
 import * as path from "path"
+import { XMLParser } from "fast-xml-parser"
 
 export * from "./entity"
 
@@ -120,7 +121,7 @@ export const generateAssertion = async (args: {
     { extract: { request: { id: requestId } } }, // request info
     'post', // binding
     user,
-    assertion.createTemplateCallback(connection, user, requestId),
+    assertion.createTemplateCallback({ connection, user, requestId }),
     false, // encryptThenSign
     relayState
   )
@@ -177,5 +178,29 @@ export const validateAssertion = async (args: {
       return r.fail(error.message)
     }
     return r.fail(`Error: ${error}`)
+  }
+}
+
+export const parseAssertion = (base64Assertion: string): e.AssertionExtract => {
+  const xml = samlify.Utility.base64Decode(base64Assertion, false)
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: "@_",
+    allowBooleanAttributes: true,
+    parseAttributeValue: true,
+    trimValues: true,
+    removeNSPrefix: true
+  })
+  const properties = parser.parse(xml)
+  return {
+    id: properties["Response"]["@_ID"],
+    inResponseTo: properties["Response"]["@_InResponseTo"],
+    issuer: properties["Response"]["Issuer"],
+    audience: properties["Response"]["Assertion"]["Conditions"]["AudienceRestriction"]["Audience"],
+    issueInstant: new Date(properties["Response"]["@_IssueInstant"]),
+    nameID: properties["Response"]["Assertion"]["Subject"]["NameID"]["#text"],
+    notBefore: new Date(properties["Response"]["Assertion"]["Conditions"]["@_NotBefore"]),
+    notOnOrAfter: new Date(properties["Response"]["Assertion"]["Conditions"]["@_NotOnOrAfter"]),
+    destination: properties["Response"]["@_Destination"]
   }
 }
