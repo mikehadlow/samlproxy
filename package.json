@@ -5,6 +5,6 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "overmind start -p 7272 -P 10"
+    "dev": "direnv allow; overmind start -p 7272 -P 10"
   }
 }

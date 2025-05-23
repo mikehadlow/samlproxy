@@ -14,6 +14,11 @@ An an example implementation of a SAML IdP Proxy
 ## Development
 SamlProxy uses bun. Install bun by following the instructions on the [bun website](https://bun.sh/docs/installation)
 
+Environment variables are held in `.envrc`. You should copy `.envrc.template` and fill in the required env vars. This project uses [direnv](https://direnv.net/) to populate env vars for local development:
+```zsh
+brew install direnv
+```
+
 This is a monorepo containing 3 packages:
 1. `proxy`: This is the core proxy package.
 1. `testsp`: This is a test SAML service provider (SP). This mimics the application that needs to authenticate.
