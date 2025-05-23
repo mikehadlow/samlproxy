@@ -13,7 +13,9 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@types/mustache": "^4.2.6",
     "common": "workspace:*",
-    "hono": "^4.7.9"
+    "hono": "^4.7.9",
+    "mustache": "^4.2.0"
   }
 }

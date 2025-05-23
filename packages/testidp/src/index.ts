@@ -4,6 +4,7 @@ import * as fs from "fs"
 import * as path from "path"
 import * as saml from "common/saml"
 import { z } from "zod"
+import Mustache from "mustache"
 
 const loginForm = z.object({
   username: z.string().email(),
@@ -63,8 +64,9 @@ app.get("/sso", async (c) => {
 
   const result = await saml.generateAssertion({ connection, requestId, relayState, user })
 
-  // TODO: Render assertion form HMTL
-  return c.text("Logged in")
+  const assertionTemplate = fs.readFileSync(path.join(__dirname, "html", "assertion.html"), "utf8")
+  const html = Mustache.render(assertionTemplate, result)
+  return c.html(html)
 })
 
 export default app

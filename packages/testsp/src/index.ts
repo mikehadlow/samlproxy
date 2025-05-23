@@ -43,7 +43,7 @@ app.post("/login", async (c) => {
 
 app.post("/acs", (c) => {
   // TODO validate SAML assertion
-  return c.text("Logged in")
+  return c.text("SP Logged in")
 })
 
 export default app
