@@ -6,6 +6,9 @@ import * as saml from "common/saml"
 import { z } from "zod"
 import * as r from "common/result"
 import * as jwt from "jsonwebtoken"
+import { setCookie, getCookie, deleteCookie } from "hono/cookie"
+import { createMiddleware } from 'hono/factory'
+import Mustache from "mustache"
 
 const connection: saml.IdpConnection = {
   // SP (my) properties
@@ -57,10 +60,51 @@ const assertionForm = z.object({
   RelayState: z.string(),
 })
 
+const session = z.object({
+  username: z.string().email()
+})
+type Session = z.infer<typeof session>
+
+const env = {
+  jwtSecret: process.env["TEST_SP_JWT_SECRET"] ?? ""
+}
+
+const authCookieName = "sp_auth"
+
 const app = new Hono()
 app.use(logger())
+const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (async (c, next) => {
+  // don't authenticate the login or acs paths
+  if (c.req.path === "/login" || c.req.path === "/acs") {
+    await next()
+  }
+  const token = getCookie(c, authCookieName)
+  if (!token) {
+    return c.redirect("/login")
+  }
+  try {
+    const decoded = jwt.verify(token, env.jwtSecret)
+    const decodedSession = session.parse(decoded)
+    c.set("session", decodedSession)
+  }
+  catch (e) {
+    console.log(`JWT verify failed with ${e}`)
+    return c.redirect("/login")
+  }
+  await next()
+})
+app.use(authMiddleware)
 
-app.get("/", (c) => c.redirect("/login"))
+app.get("/", authMiddleware, async (c) => {
+  const template = fs.readFileSync(path.join(__dirname, "html", "home.html"), "utf8")
+  const html = Mustache.render(template, c.var.session)
+  return c.html(html)
+})
+
+app.get("/logout", (c) => {
+  deleteCookie(c, authCookieName)
+  return c.redirect("/login")
+})
 
 app.get("/login", (c) => {
   const html = fs.readFileSync(path.join(__dirname, "html", "login.html"), "utf8")
@@ -89,8 +133,16 @@ app.post("/acs", async (c) => {
 
   const result = await saml.validateAssertion({ connection, encodedAssertion: form.SAMLResponse })
   if (r.isOk(result)) {
-    // TODO: issue JWT
-    return c.text(`SP Logged in as ${assertionExtract.nameID}`)
+    // We've successfully validated the SAML Assertion, so now we can issue a JWT for our application
+    const session: Session = { username: assertionExtract.nameID }
+    const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
+    setCookie(c, authCookieName, token, {
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000, // 1h
+      sameSite: "Lax",
+    })
+    // Redirect to the homepage
+    return c.redirect("/")
   }
   else {
     console.log(`SP Error validating assertion: ${result.message}`)
