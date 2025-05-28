@@ -9,6 +9,7 @@ import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
 import Mustache from "mustache"
+import * as db from "./db"
 
 const connection: saml.IdpConnection = {
   // SP (my) properties
@@ -119,6 +120,14 @@ app.post("/login", async (c) => {
   // the IdP which we want to use to authenticate the user
   // but now simply redirect to the test IdP
   const relayState = `rs-${crypto.randomUUID()}`
+
+  // record the relaystate and email in the db
+  db.recordRelayState({
+    relayState,
+    email: login.username,
+  })
+
+  // finally redirect to the IdP
   const result = saml.generateAuthnRequest({ connection, relayState })
   return c.redirect(result.url)
 })
@@ -130,6 +139,13 @@ app.post("/acs", async (c) => {
 
   // TODO: Here we can lookup the correct connection for this Assertion
   console.log("Assertion from IdP: ", assertionExtract.issuer)
+
+  // validate the relayState
+  const relayStateResult = db.readRelayState({ relayState: form.RelayState })
+  if (!relayStateResult || relayStateResult.email !== assertionExtract.nameID) {
+    console.log(`SP Error invalid RelayState: ${form.RelayState}, email: ${assertionExtract.nameID}`)
+    return c.text("Login failed")
+  }
 
   const result = await saml.validateAssertion({ connection, encodedAssertion: form.SAMLResponse })
   if (r.isOk(result)) {
