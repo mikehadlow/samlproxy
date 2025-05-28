@@ -3,7 +3,7 @@ import { logger } from 'hono/logger'
 import * as fs from "fs"
 import * as path from "path"
 import * as saml from "common/saml"
-import { z } from "zod"
+import { z } from "zod/v4"
 import * as r from "common/result"
 import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
