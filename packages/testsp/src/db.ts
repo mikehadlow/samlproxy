@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite"
 import * as fs from "fs"
 import * as path from "path"
 import * as z from "zod/v4"
+import * as r from "common/result"
 
 const dbFolder = `${__dirname}/../db`
 const dbPath = path.join(dbFolder, "db.sqlite3")
@@ -51,7 +52,7 @@ export const recordRelayState = (args: { relayState: string, email: string }) =>
   })
 }
 
-export const readRelayState = (args: { relayState: string }): RelayState | null => {
+export const consumeRelayState = (args: { relayState: string }): r.Result<RelayState> => {
   const { relayState } = args
   using db = openDb()
   using query = db.query(`SELECT relay_state, email, timestamp, used
@@ -63,14 +64,14 @@ export const readRelayState = (args: { relayState: string }): RelayState | null 
     relayState,
   })
   if (!result) {
-    return null
+    return r.fail("RelayState is invalid.")
   }
   // updated used to 1, so this relay state can't be used a second time
   using updateUsed = db.query(`UPDATE relay_state SET used = 1 WHERE relay_state = $relayState;`)
   updateUsed.run({
     relayState,
   })
-  return relayStateParser.parse(result)
+  return r.from(relayStateParser.parse(result))
 }
 
 init()

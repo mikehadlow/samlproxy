@@ -141,14 +141,20 @@ app.post("/acs", async (c) => {
   console.log("Assertion from IdP: ", assertionExtract.issuer)
 
   // validate the relayState
-  const relayStateResult = db.readRelayState({ relayState: form.RelayState })
-  if (!relayStateResult || relayStateResult.email !== assertionExtract.nameID) {
-    console.log(`SP Error invalid RelayState: ${form.RelayState}, email: ${assertionExtract.nameID}`)
-    return c.text("Login failed")
-  }
+  const relayStateResult = db.consumeRelayState({ relayState: form.RelayState })
+  const emailCheckResult = r.bind(
+    relayStateResult,
+    (relayState) => relayState.email === assertionExtract.nameID
+      ? r.from(true)
+      : r.fail(`SP Error invalid email: expected: ${relayState.email}, got: ${assertionExtract.nameID}`)
+  )
 
-  const result = await saml.validateAssertion({ connection, encodedAssertion: form.SAMLResponse })
-  if (r.isOk(result)) {
+  // validate the assertion certificate etc
+  const assertionResult = await r.bindAsync(
+    emailCheckResult,
+    (_) => saml.validateAssertion({ connection, encodedAssertion: form.SAMLResponse }))
+
+  const result = r.map(assertionResult, (_) => {
     // We've successfully validated the SAML Assertion, so now we can issue a JWT for our application
     const session: Session = { username: assertionExtract.nameID }
     const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
@@ -157,6 +163,9 @@ app.post("/acs", async (c) => {
       maxAge: 60 * 60 * 1000, // 1h
       sameSite: "Lax",
     })
+  })
+
+  if (r.isOk(result)) {
     // Redirect to the homepage
     return c.redirect("/")
   }
