@@ -1,7 +1,5 @@
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
-import * as fs from "fs"
-import * as path from "path"
 import * as saml from "common/saml"
 import { z } from "zod/v4"
 import * as r from "common/result"
@@ -10,6 +8,10 @@ import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
 import Mustache from "mustache"
 import * as db from "./db"
+
+// html imports
+import homeHtml from "./html/home.html"
+import loginHmtl from "./html/login.html"
 
 const connection: saml.IdpConnection = {
   // SP (my) properties
@@ -97,8 +99,7 @@ const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (a
 app.use(authMiddleware)
 
 app.get("/", authMiddleware, async (c) => {
-  const template = fs.readFileSync(path.join(__dirname, "html", "home.html"), "utf8")
-  const html = Mustache.render(template, c.var.session)
+  const html = Mustache.render(homeHtml, c.var.session)
   return c.html(html)
 })
 
@@ -108,14 +109,14 @@ app.get("/logout", (c) => {
 })
 
 app.get("/login", (c) => {
-  const html = fs.readFileSync(path.join(__dirname, "html", "login.html"), "utf8")
-  return c.html(html)
+  return c.html(loginHmtl)
 })
 
 app.post("/login", async (c) => {
   const body = await c.req.parseBody()
   const login = loginForm.parse(body)
   console.log("login.username", login.username)
+
   // at this point we would use the entered email address to choose
   // the IdP which we want to use to authenticate the user
   // but now simply redirect to the test IdP

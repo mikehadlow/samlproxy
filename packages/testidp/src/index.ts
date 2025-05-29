@@ -9,6 +9,11 @@ import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
 
+// html imports
+import homeHtml from "./html/home.html"
+import loginHtml from "./html/login.html"
+import assertionHtml from "./html/assertion.html"
+
 const loginForm = z.object({
   username: z.string().email(),
   password: z.string(),
@@ -81,8 +86,7 @@ const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (a
 app.use(authMiddleware)
 
 app.get("/", authMiddleware, async (c) => {
-  const template = fs.readFileSync(path.join(__dirname, "html", "home.html"), "utf8")
-  const html = Mustache.render(template, c.var.session)
+  const html = Mustache.render(homeHtml, c.var.session)
   return c.html(html)
 })
 
@@ -93,8 +97,7 @@ app.get("/logout", (c) => {
 
 app.get("/login", (c) => {
   const redirectTo = c.req.query(redirectQueryParam) ?? "/"
-  const template = fs.readFileSync(path.join(__dirname, "html", "login.html"), "utf8")
-  const html = Mustache.render(template, { redirectTo })
+  const html = Mustache.render(loginHtml, { redirectTo })
   return c.html(html)
 })
 
@@ -129,8 +132,7 @@ app.get("/sso", authMiddleware, async (c) => {
 
   const result = await saml.generateAssertion({ connection, requestId, relayState, user })
 
-  const assertionTemplate = fs.readFileSync(path.join(__dirname, "html", "assertion.html"), "utf8")
-  const html = Mustache.render(assertionTemplate, result)
+  const html = Mustache.render(assertionHtml, result)
   return c.html(html)
 })
 
