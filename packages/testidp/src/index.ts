@@ -5,10 +5,14 @@ import * as path from "path"
 import * as saml from "common/saml"
 import { z } from "zod/v4"
 import Mustache from "mustache"
+import * as jwt from "jsonwebtoken"
+import { setCookie, getCookie, deleteCookie } from "hono/cookie"
+import { createMiddleware } from 'hono/factory'
 
 const loginForm = z.object({
   username: z.string().email(),
   password: z.string(),
+  redirect_to: z.string(),
 })
 
 const authnRequest = z.object({
@@ -31,13 +35,66 @@ const connection: saml.SpConnection = {
   spAcsUrl: "http://localhost:7282/acs",
 }
 
+const session = z.object({
+  username: z.string().email()
+})
+type Session = z.infer<typeof session>
+
+const env = {
+  jwtSecret: process.env["TEST_IDP_JWT_SECRET"] ?? ""
+}
+
+const authCookieName = "idp_auth"
+const redirectQueryParam = "redirect_to"
+
 const app = new Hono()
 app.use(logger())
 
-app.get("/", (c) => c.redirect("/login"))
+const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (async (c, next) => {
+  // don't authenticate the login path
+  if (c.req.path === "/login") {
+    await next()
+  }
+  // if the AuthnRequest hits the /sso path, but the user hasn't already logged in
+  // this authMiddleware will bounce them through the login process. After they've
+  // authenticated, we'll redirect them to /sso. Here we pass the orginal authnRequest
+  // through a querystring param
+  const redirectTo = (() => {
+    const url = new URL(c.req.url)
+    return encodeURIComponent(`${url.pathname}?${url.searchParams}`)
+  })()
+  const token = getCookie(c, authCookieName)
+  if (!token) {
+    return c.redirect(`/login?${redirectQueryParam}=${redirectTo}`)
+  }
+  try {
+    const decoded = jwt.verify(token, env.jwtSecret)
+    const decodedSession = session.parse(decoded)
+    c.set("session", decodedSession)
+  }
+  catch (e) {
+    console.log(`JWT verify failed with ${e}`)
+    return c.redirect(`/login?${redirectQueryParam}=${redirectTo}`)
+  }
+  await next()
+})
+app.use(authMiddleware)
+
+app.get("/", authMiddleware, async (c) => {
+  const template = fs.readFileSync(path.join(__dirname, "html", "home.html"), "utf8")
+  const html = Mustache.render(template, c.var.session)
+  return c.html(html)
+})
+
+app.get("/logout", (c) => {
+  deleteCookie(c, authCookieName)
+  return c.redirect("/login")
+})
 
 app.get("/login", (c) => {
-  const html = fs.readFileSync(path.join(__dirname, "html", "login.html"), "utf8")
+  const redirectTo = c.req.query(redirectQueryParam) ?? "/"
+  const template = fs.readFileSync(path.join(__dirname, "html", "login.html"), "utf8")
+  const html = Mustache.render(template, { redirectTo })
   return c.html(html)
 })
 
@@ -46,10 +103,18 @@ app.post("/login", async (c) => {
   const login = loginForm.parse(body)
   console.log("login.username", login.username)
   // TODO, set JWT
-  return c.text("Logged in")
+  // We've successfully validated the SAML Assertion, so now we can issue a JWT for our application
+  const session: Session = { username: login.username }
+  const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
+  setCookie(c, authCookieName, token, {
+    httpOnly: true,
+    maxAge: 60 * 60 * 1000, // 1h
+    sameSite: "Lax",
+  })
+  return c.redirect(login.redirect_to)
 })
 
-app.get("/sso", async (c) => {
+app.get("/sso", authMiddleware, async (c) => {
   const request = authnRequest.parse(c.req.query())
   console.log("SAMLRequest", request.SAMLRequest)
   console.log("RelayState", request.RelayState)
@@ -57,7 +122,7 @@ app.get("/sso", async (c) => {
   // TODO: Validate the AuthnRequest
 
   const user: saml.User = {
-    email: "me@mikehadlow.com"
+    email: c.var.session.username
   }
   const relayState = request.RelayState
   const requestId = `_${crypto.randomUUID()}`

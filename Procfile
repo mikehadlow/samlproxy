@@ -1,3 +1,3 @@
-proxy: bun run --filter proxy dev
-sp: bun run --filter testsp dev
-idp: bun run --filter testidp dev
+proxy: bun run --filter proxy --watch dev
+sp: bun run --filter testsp --watch dev
+idp: bun run --filter testidp --watch dev
