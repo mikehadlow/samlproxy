@@ -104,9 +104,10 @@ app.get("/login", (c) => {
 app.post("/login", async (c) => {
   const body = await c.req.parseBody()
   const login = loginForm.parse(body)
-  console.log("login.username", login.username)
-  // TODO, set JWT
-  // We've successfully validated the SAML Assertion, so now we can issue a JWT for our application
+
+  // TODO: validate the email and password
+
+  // The user has authenticated, so now we can issue a JWT
   const session: Session = { username: login.username }
   const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
   setCookie(c, authCookieName, token, {
