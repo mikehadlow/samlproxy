@@ -11,7 +11,7 @@ import { connection } from "./connection"
 import * as html from "./html"
 
 const loginForm = z.object({
-  username: z.string().email(),
+  username: z.email(),
 })
 
 const assertionForm = z.object({
@@ -20,7 +20,7 @@ const assertionForm = z.object({
 })
 
 const session = z.object({
-  username: z.string().email()
+  username: z.email()
 })
 type Session = z.infer<typeof session>
 
@@ -61,7 +61,7 @@ app.get("/", authMiddleware, async (c) => {
     },
     username: c.var.session.username,
   }
-  return c.html(<html.Home { ...props }></html.Home>)
+  return c.html(html.Home(props))
 })
 
 app.get("/logout", (c) => {
@@ -75,7 +75,7 @@ app.get("/login", (c) => {
       title: "SP Login"
     }
   }
-  return c.html(<html.Login { ...props }></html.Login>)
+  return c.html(html.Login(props))
 })
 
 app.post("/login", async (c) => {
@@ -155,7 +155,7 @@ app.post("/acs", async (c) => {
       ... errorProps,
     }
     c.status(props.status)
-    return c.html(<html.Error {...props}></html.Error>)
+    return c.html(html.Error(props))
   }
 })
 
@@ -169,7 +169,7 @@ app.notFound((c) => {
     message: "There's nothing to see here, move along please."
   } as const
   c.status(props.status)
-  return c.html(<html.Error {...props }></html.Error>)
+  return c.html(html.Error(props))
 })
 
 export default app
