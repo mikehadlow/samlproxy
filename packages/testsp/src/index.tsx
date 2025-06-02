@@ -6,61 +6,9 @@ import * as r from "common/result"
 import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
-import Mustache from "mustache"
 import * as db from "./db"
-import * as fs from "fs"
-import * as path from "path"
-
-// html imports
-const readHtml = (page:string) => fs.readFileSync(path.join(__dirname, "html", `${page}.html`), "utf8")
-const homeHtml = readHtml("home")
-const loginHmtl = readHtml("login")
-const errorHtml = readHtml("error")
-const error = (args: {
-  status: number,
-  title: string,
-  message: string }) => Mustache.render(errorHtml, args)
-
-const connection: saml.IdpConnection = {
-  // SP (my) properties
-  spEntityId: "http://localhost:7282/test-sp",
-  spAcsUrl: "http://localhost:7282/acs",
-  // IdP (their) properties
-  idpEntityId: "http://localhost:7292/test-idp",
-  idpSsoUrl: "http://localhost:7292/sso",
-  // certificate must match the IdP's certificate
-  signingCertificate: `-----BEGIN CERTIFICATE-----
-  MIIFazCCA1OgAwIBAgIUPxp5jOrtjfYSrKdoT4FWy51D93UwDQYJKoZIhvcNAQEL
-  BQAwRTELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoM
-  GEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDAeFw0yNTA1MjIxMTUwMTRaFw0zNTA1
-  MjAxMTUwMTRaMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEw
-  HwYDVQQKDBhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwggIiMA0GCSqGSIb3DQEB
-  AQUAA4ICDwAwggIKAoICAQDcRA23hUPHSsVgUuXcMyDYnYrFUjbJsH44g5CLXtn8
-  WDeo3iSxFaTwq6tbeA81bXM513L+FhcuW2IgAJ2sNcz092JLW9XxGRiLU3juCehm
-  DEvqGYgMOGy6QRLG9IfebYwkakzJonHkdE5mk+ESgg8KJykjIJu7U61ANVcDuj0g
-  wN6JrUqd0Bnrnrj7cGCNOr6Tcez+JAj/ROoxOaRB6kT/++7D/M+O49nZb+UTe6dc
-  3J/xSEIiF5sUO/Kh8mNAtEFEyCwfPTxnL32PpGoG60i9zuOFhAPYJHoBXMdYlF8+
-  m4/4IT86kcDF1FYyk79hWqUX+7oIDtPG0+TYrIZ589dmYoNHgSDcUWJV/diawiWg
-  1vCrGBOEBDKsqk/npsrLgSVJED+yx3wM3M5Oe1+I7YtQQ03Z4LDk5HXZLJ4LvAfC
-  f43KIXDWqL7zC+cWZKeXKmn7OZBI5w2YqwPTS1y0OJeYkPm4EV6cunnKtVhPPzhO
-  Lqk7YiOoIf7tTNzjwyg1k594LNAzBQ501VHt0yY69GAsZKF+BBV3Skhb8BI6D+t6
-  UBkFtx83TbWy0NbdKcTHuV7QKdWk698oxxp2cAO0TLMkd7yF6cPOKE/yeBHS41H2
-  t3A3h8PvNJr2JY3FADEYmbWUMydmMbXSgIgV3TDHCEfp32bfBzMzNpUx/bKyOT/d
-  9wIDAQABo1MwUTAdBgNVHQ4EFgQUWf076as3tYYTMoGBRHWN7jjVvuIwHwYDVR0j
-  BBgwFoAUWf076as3tYYTMoGBRHWN7jjVvuIwDwYDVR0TAQH/BAUwAwEB/zANBgkq
-  hkiG9w0BAQsFAAOCAgEAdlcTqVYNd8B2JbS5EicqpTobkTuGCLUfZAS5uhNmrLcY
-  gnc97vDkJYPFKynTEW39KrH+MdL/GZAuMv2XxxTPDynfCW8MRlm37JtlNI66yb1B
-  z9zyRISdpyTUa248iwCLzwgUyVFfGIeqCzcg8KjJQmD50Dj/Ush2yePKWKPui/tq
-  smYspZenkGlwrTk6Wf1rUwMKIy3GNckKZ/J14teiej8Lk9CfwbVpGlOWoJWG6TSK
-  +VybD7XXrhp3Lsvel5FYUTM+Hbtk7xxwkLjLVDyqsQpH6NH03YZaK/HZowsUfR/k
-  YKI4APosP8Qy75kBleQF88Y+Jp+BYA1SuLt+5IAIipISh+KJmdvHOYRskOm5QcG7
-  yAKs9PebFj8NaoSa/YNzIdz9HgNDC39g92u2WRjKrnE1fNnaHDunQX7C9GBFH9oM
-  C+ld5sfgJM7iI3AI8ncYu2bJbFI24AWy7krjmq4jC9R0rNM66nHlbMcfoFLNtHwl
-  FL9QQcaFBk752qVkxqHHvCfPfj3Ihw4PZV1MyVckKQrjDgxpFtQ+M7u48Enw5Sco
-  IwcCOyy436Lf//f3NdRWduszRavJK7uPgtgHBnoqYtEh13LkybMRI+epVys4reFu
-  dWSssB+v4QtZhhvlG2CScPDhtN910uzIX6YYD9CPWXU1ptNm8l9O8EVKdNloYlU=
-  -----END CERTIFICATE-----`,
-}
+import { connection } from "./connection"
+import * as html from "./html"
 
 const loginForm = z.object({
   username: z.string().email(),
@@ -107,8 +55,13 @@ const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (a
 app.use(authMiddleware)
 
 app.get("/", authMiddleware, async (c) => {
-  const html = Mustache.render(homeHtml, c.var.session)
-  return c.html(html)
+  const props = {
+    siteData: {
+      title: "SP Home",
+    },
+    username: c.var.session.username,
+  }
+  return c.html(<html.Home { ...props }></html.Home>)
 })
 
 app.get("/logout", (c) => {
@@ -117,7 +70,12 @@ app.get("/logout", (c) => {
 })
 
 app.get("/login", (c) => {
-  return c.html(loginHmtl)
+  const props = {
+    siteData: {
+      title: "SP Login"
+    }
+  }
+  return c.html(<html.Login { ...props }></html.Login>)
 })
 
 app.post("/login", async (c) => {
@@ -161,9 +119,9 @@ app.post("/acs", async (c) => {
   // validate the assertion certificate etc
   const assertionResult = await r.bindAsync(
     emailCheckResult,
-    (_) => saml.validateAssertion({ connection, encodedAssertion: form.SAMLResponse }))
+    () => saml.validateAssertion({ connection, encodedAssertion: form.SAMLResponse }))
 
-  const result = r.map(assertionResult, (_) => {
+  const result = r.map(assertionResult, () => {
     // We've successfully validated the SAML Assertion, so now we can issue a JWT for our application
     const session: Session = { username: assertionExtract.nameID }
     const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
@@ -179,19 +137,39 @@ app.post("/acs", async (c) => {
   }
   else {
     console.log(`SP Error validating assertion: ${result.message}`)
-    if (typeof result.message === "string") {
-      return c.html(error({
+    const errorProps = (typeof result.message === "string")
+      ? {
         status: 401,
         title: "Not Authenticated",
         message: result.message
-      }))
+      } as const
+      : {
+        status: 500,
+        title: "Internal Server Error",
+        message: "Oh dear, a bug. See logs for details.",
+      } as const
+    const props = {
+      siteData: {
+        title: "SP Error",
+      },
+      ... errorProps,
     }
-    return c.html(error({
-      status: 500,
-      title: "Internal Server Error",
-      message: "Oh dear, a bug. See logs for details.",
-    }))
+    c.status(props.status)
+    return c.html(<html.Error {...props}></html.Error>)
   }
+})
+
+app.notFound((c) => {
+  const props = {
+    siteData: {
+      title: "Not Found"
+    },
+    status: 404,
+    title: "Not Found",
+    message: "There's nothing to see here, move along please."
+  } as const
+  c.status(props.status)
+  return c.html(<html.Error {...props }></html.Error>)
 })
 
 export default app
