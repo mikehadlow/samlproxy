@@ -19,12 +19,16 @@ const authnRequest = z.object({
   RelayState: z.string(),
 })
 
-const readKey = (key:string) => fs.readFileSync(path.join(__dirname, "keys", key), "utf8")
-const readHtml = (page:string) => fs.readFileSync(path.join(__dirname, "html", `${page}.html`), "utf8")
-const homeHtml = readHtml("home")
-const loginHtml = readHtml("login")
-const assertionHtml = readHtml("assertion")
+const session = z.object({
+  username: z.email()
+})
+type Session = z.infer<typeof session>
 
+const env = {
+  jwtSecret: process.env["TEST_IDP_JWT_SECRET"] ?? ""
+}
+
+const readKey = (key:string) => fs.readFileSync(path.join(__dirname, "keys", key), "utf8")
 const encryptKey = readKey("encryptKey.pem")
 const encryptionCert = readKey("encryptionCert.cer")
 
@@ -40,17 +44,16 @@ const connection: saml.SpConnection = {
   spAcsUrl: "http://localhost:7282/acs",
 }
 
-const session = z.object({
-  username: z.string().email()
-})
-type Session = z.infer<typeof session>
-
-const env = {
-  jwtSecret: process.env["TEST_IDP_JWT_SECRET"] ?? ""
-}
-
 const authCookieName = "idp_auth"
 const redirectQueryParam = "redirect_to"
+
+const renderHtml = <T>(page: string) => (view: T) => {
+  const template = fs.readFileSync(path.join(__dirname, "html", `${page}.html`), "utf8")
+  return Mustache.render(template, view)
+}
+const homeHtml = renderHtml<Session>("home")
+const loginHtml = renderHtml<{ redirectTo: string }>("login")
+const assertionHtml = renderHtml<saml.Assertion>("assertion")
 
 const app = new Hono()
 app.use(logger())
@@ -86,8 +89,7 @@ const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (a
 app.use(authMiddleware)
 
 app.get("/", authMiddleware, async (c) => {
-  const html = Mustache.render(homeHtml, c.var.session)
-  return c.html(html)
+  return c.html(homeHtml(c.var.session))
 })
 
 app.get("/logout", (c) => {
@@ -97,8 +99,7 @@ app.get("/logout", (c) => {
 
 app.get("/login", (c) => {
   const redirectTo = c.req.query(redirectQueryParam) ?? "/"
-  const html = Mustache.render(loginHtml, { redirectTo })
-  return c.html(html)
+  return c.html(loginHtml({ redirectTo }))
 })
 
 app.post("/login", async (c) => {
@@ -134,8 +135,7 @@ app.get("/sso", authMiddleware, async (c) => {
 
   const result = await saml.generateAssertion({ connection, requestId, relayState, user })
 
-  const html = Mustache.render(assertionHtml, result)
-  return c.html(html)
+  return c.html(assertionHtml(result))
 })
 
 export default app
