@@ -11,7 +11,6 @@ import { createMiddleware } from 'hono/factory'
 
 const loginForm = z.object({
   username: z.email(),
-  password: z.string(),
   redirect_to: z.string(),
 })
 
@@ -106,7 +105,8 @@ app.post("/login", async (c) => {
   const body = await c.req.parseBody()
   const login = loginForm.parse(body)
 
-  // TODO: validate the email and password
+  // Here a real IdP would validate the user's credientials.
+  // This test IdP accepts whatever is entered.
 
   // The user has authenticated, so now we can issue a JWT
   const session: Session = { username: login.username }

@@ -3,21 +3,18 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SP Home</title>
+    <title>SP Error</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
 </head>
 <body>
     <div class="container">
         <section class="section">
             <div class="block">
-                <h1 class="title">SP Home</h1>
-                <p>Welcome <strong>{{username}}</strong>!</p>
-                <p>
-                    You are now authenticated with the service provider.
-                </p>
+                <h1 class="title">{{status}} {{title}}</h1>
+                <p>{{message}}</p>
             </div>
             <div class="block">
-                <a class="button is-primary" href="/logout">Logout</a>
+                <a class="button is-primary" href="/">Home</a>
             </div>
         </section>
     </div>

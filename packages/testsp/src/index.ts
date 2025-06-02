@@ -15,6 +15,11 @@ import * as path from "path"
 const readHtml = (page:string) => fs.readFileSync(path.join(__dirname, "html", `${page}.html`), "utf8")
 const homeHtml = readHtml("home")
 const loginHmtl = readHtml("login")
+const errorHtml = readHtml("error")
+const error = (args: {
+  status: number,
+  title: string,
+  message: string }) => Mustache.render(errorHtml, args)
 
 const connection: saml.IdpConnection = {
   // SP (my) properties
@@ -170,12 +175,22 @@ app.post("/acs", async (c) => {
   })
 
   if (r.isOk(result)) {
-    // Redirect to the homepage
     return c.redirect("/")
   }
   else {
     console.log(`SP Error validating assertion: ${result.message}`)
-    return c.text("Login failed")
+    if (typeof result.message === "string") {
+      return c.html(error({
+        status: 401,
+        title: "Not Authenticated",
+        message: result.message
+      }))
+    }
+    return c.html(error({
+      status: 500,
+      title: "Internal Server Error",
+      message: "Oh dear, a bug. See logs for details.",
+    }))
   }
 })
 

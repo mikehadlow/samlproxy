@@ -10,14 +10,15 @@
     <section class="section">
         <div class="container">
             <h1 class="title">IdP Login</h1>
+            <p>
+                This is the Identity provider login page. In a real system the credentials entered below
+                would be validated, but this test IdP allows you to enter any email for the username.
+                It performs no validation or checks of any kind.
+            </p>
             <form action="/login" method="post">
                 <div class="field">
                     <label class="label" for="username">Email:</label>
                     <input class="input" type="username" id="email" name="username" required>
-                </div>
-                <div class="field">
-                    <label class="label" for="password">Password:</label>
-                    <input class="input" type="password" id="password" name="password" required>
                 </div>
                 <input type="hidden" id="redirect_to" name="redirect_to" value="{{redirectTo}}">
                 <div class="field">
