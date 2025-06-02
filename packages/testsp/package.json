@@ -17,7 +17,6 @@
     "common": "workspace:*",
     "hono": "^4.7.9",
     "jsonwebtoken": "^9.0.2",
-    "mustache": "^4.2.0",
     "zod": "^3.25.20"
   }
 }
