@@ -8,10 +8,13 @@ import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
 import Mustache from "mustache"
 import * as db from "./db"
+import * as fs from "fs"
+import * as path from "path"
 
 // html imports
-import homeHtml from "./html/home.html"
-import loginHmtl from "./html/login.html"
+const readHtml = (page:string) => fs.readFileSync(path.join(__dirname, "html", `${page}.html`), "utf8")
+const homeHtml = readHtml("home")
+const loginHmtl = readHtml("login")
 
 const connection: saml.IdpConnection = {
   // SP (my) properties

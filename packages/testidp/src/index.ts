@@ -9,13 +9,8 @@ import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
 
-// html imports
-import homeHtml from "./html/home.html"
-import loginHtml from "./html/login.html"
-import assertionHtml from "./html/assertion.html"
-
 const loginForm = z.object({
-  username: z.string().email(),
+  username: z.email(),
   password: z.string(),
   redirect_to: z.string(),
 })
@@ -25,8 +20,14 @@ const authnRequest = z.object({
   RelayState: z.string(),
 })
 
-const encryptKey: string = fs.readFileSync(path.join(__dirname, "keys", "encryptKey.pem"), "utf8")
-const encryptionCert: string = fs.readFileSync(path.join(__dirname, "keys", "encryptionCert.cer"), "utf8")
+const readKey = (key:string) => fs.readFileSync(path.join(__dirname, "keys", key), "utf8")
+const readHtml = (page:string) => fs.readFileSync(path.join(__dirname, "html", `${page}.html`), "utf8")
+const homeHtml = readHtml("home")
+const loginHtml = readHtml("login")
+const assertionHtml = readHtml("assertion")
+
+const encryptKey = readKey("encryptKey.pem")
+const encryptionCert = readKey("encryptionCert.cer")
 
 const connection: saml.SpConnection = {
   // IdP (my) properties
