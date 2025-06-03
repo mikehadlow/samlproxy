@@ -63,6 +63,26 @@ export const Login = (props: { siteData: SiteData, redirectTo: string }) => (
   </Layout>
 )
 
+export const Error = (props: {
+  siteData: SiteData,
+  status: number,
+  title: string,
+  message: string }) => (
+  <Layout {...props.siteData }>
+      <div class="container">
+          <section class="section">
+              <div class="block">
+                  <h1 class="title">{props.status} {props.title}</h1>
+                  <p>{props.message}</p>
+              </div>
+              <div class="block">
+                  <a class="button is-primary" href="/">Home</a>
+              </div>
+          </section>
+      </div>
+  </Layout>
+)
+
 export const Assertion = (props: {
   acsUrl: string,
   assertion: string,

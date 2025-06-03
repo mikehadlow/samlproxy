@@ -131,20 +131,32 @@ app.get("/sso", authMiddleware, async (c) => {
     requestId: authnReq.id,
   }))
 
-  const assertionResult = await r.mapAsync(assertionProps, (props) =>   saml.generateAssertion({ connection, ...props }))
+  const result = await r.mapAsync(assertionProps, (props) =>   saml.generateAssertion({ connection, ...props }))
 
-  if (r.isOk(assertionResult)) {
-    return c.html(html.Assertion(assertionResult.value))
-  }
-  // TODO: make a nice error page
-  if (typeof assertionResult.message === "string") {
-    c.status(401)
-    return c.text(assertionResult.message)
+  if (r.isOk(result)) {
+    return c.html(html.Assertion(result.value))
   }
   else {
-    console.log(`Server Error: ${JSON.stringify(assertionResult.message, null, 2)}`)
-    c.status(500)
-    return c.text("Internal server error. See logs for details")
+    console.log(`IdP Error validating authnRequest: ${result.message}`)
+    const errorProps = (typeof result.message === "string")
+      ? {
+        status: 401,
+        title: "Not Authenticated",
+        message: result.message
+      } as const
+      : {
+        status: 500,
+        title: "Internal Server Error",
+        message: "Oh dear, a bug. See logs for details.",
+      } as const
+    const props = {
+      siteData: {
+        title: "IdP Error",
+      },
+      ... errorProps,
+    }
+    c.status(props.status)
+    return c.html(html.Error(props))
   }
 })
 
