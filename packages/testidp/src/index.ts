@@ -4,10 +4,11 @@ import * as fs from "fs"
 import * as path from "path"
 import * as saml from "common/saml"
 import { z } from "zod/v4"
-import Mustache from "mustache"
 import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
+import * as html from "./html"
+import * as r from "common/result"
 
 const loginForm = z.object({
   username: z.email(),
@@ -46,14 +47,7 @@ const connection: saml.SpConnection = {
 
 const authCookieName = "idp_auth"
 const redirectQueryParam = "redirect_to"
-
-const renderHtml = <T>(page: string) => (view: T) => {
-  const template = fs.readFileSync(path.join(__dirname, "html", `${page}.html`), "utf8")
-  return Mustache.render(template, view)
-}
-const homeHtml = renderHtml<Session>("home")
-const loginHtml = renderHtml<{ redirectTo: string }>("login")
-const assertionHtml = renderHtml<saml.Assertion>("assertion")
+const siteData = (title: string): html.SiteData => ({ title })
 
 const app = new Hono()
 app.use(logger())
@@ -89,7 +83,7 @@ const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (a
 app.use(authMiddleware)
 
 app.get("/", authMiddleware, async (c) => {
-  return c.html(homeHtml(c.var.session))
+  return c.html(html.Home({ siteData: siteData("IdP Home"), ...c.var.session }))
 })
 
 app.get("/logout", (c) => {
@@ -99,7 +93,7 @@ app.get("/logout", (c) => {
 
 app.get("/login", (c) => {
   const redirectTo = c.req.query(redirectQueryParam) ?? "/"
-  return c.html(loginHtml({ redirectTo }))
+  return c.html(html.Login({ siteData: siteData("IdP Login"), redirectTo }))
 })
 
 app.post("/login", async (c) => {
@@ -125,17 +119,33 @@ app.get("/sso", authMiddleware, async (c) => {
   console.log("SAMLRequest", request.SAMLRequest)
   console.log("RelayState", request.RelayState)
 
-  // TODO: Validate the AuthnRequest
+  const parseResult = saml.parseAuthnRequest({ authnRequest: request.SAMLRequest })
 
-  const user: saml.User = {
-    email: c.var.session.username
+  const validationResult = r.validate(parseResult, (details) => saml.validateAuthnRequest({ connection, details }))
+
+  const assertionProps = r.map(validationResult, (authnReq) => ({
+    user: {
+      email: c.var.session.username
+    },
+    relayState: request.RelayState,
+    requestId: authnReq.id,
+  }))
+
+  const assertionResult = await r.mapAsync(assertionProps, (props) =>   saml.generateAssertion({ connection, ...props }))
+
+  if (r.isOk(assertionResult)) {
+    return c.html(html.Assertion(assertionResult.value))
   }
-  const relayState = request.RelayState
-  const requestId = `_${crypto.randomUUID()}`
-
-  const result = await saml.generateAssertion({ connection, requestId, relayState, user })
-
-  return c.html(assertionHtml(result))
+  // TODO: make a nice error page
+  if (typeof assertionResult.message === "string") {
+    c.status(401)
+    return c.text(assertionResult.message)
+  }
+  else {
+    console.log(`Server Error: ${JSON.stringify(assertionResult.message, null, 2)}`)
+    c.status(500)
+    return c.text("Internal server error. See logs for details")
+  }
 })
 
 export default app

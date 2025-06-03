@@ -88,6 +88,55 @@ describe("saml", () => {
     expect(result.message).toEqual("Malformed AuthnRequest")
   })
 
+  test("validateAuthnRequest should pass valid request", () => {
+    const spEntityId = "the-sp-entity-id"
+    const spAcsUrl = "https://www.example-sp.com/acs"
+    const connection = {
+      spEntityId,
+      spAcsUrl,
+    }
+    const details = {
+      issuer: spEntityId,
+      acsUrl: spAcsUrl,
+    }
+    const result = saml.validateAuthnRequest({ connection, details })
+    expect(r.isOk(result)).toBeTrue()
+  })
+
+  test("validateAuthnRequest should fail on unmatched entityId", () => {
+    const spEntityId = "the-sp-entity-id"
+    const spAcsUrl = "https://www.example-sp.com/acs"
+    const connection = {
+      spEntityId,
+      spAcsUrl,
+    }
+    const details = {
+      issuer: `${ spEntityId }-not`,
+      acsUrl: spAcsUrl,
+    }
+    const result = saml.validateAuthnRequest({ connection, details })
+    expect(r.isFail(result)).toBeTrue()
+    if(r.isOk(result)) throw new Error("Type coertion")
+    expect(result.message).toEqual("Invalid Issuer")
+  })
+
+  test("validateAuthnRequest should fail on unmatched acsUrl", () => {
+    const spEntityId = "the-sp-entity-id"
+    const spAcsUrl = "https://www.example-sp.com/acs"
+    const connection = {
+      spEntityId,
+      spAcsUrl,
+    }
+    const details = {
+      issuer: spEntityId,
+      acsUrl:  `${ spAcsUrl }-not`,
+    }
+    const result = saml.validateAuthnRequest({ connection, details })
+    expect(r.isFail(result)).toBeTrue()
+    if(r.isOk(result)) throw new Error("Type coertion")
+    expect(result.message).toEqual("Unmatched ACS URL")
+  })
+
   test("generateAssertion should work", async () => {
     // arrange
     const connection: e.SpConnection = {

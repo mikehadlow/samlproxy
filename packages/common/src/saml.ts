@@ -75,6 +75,20 @@ export const parseAuthnRequest = (args: { authnRequest: string }): r.Result<e.Au
   }
 }
 
+export const validateAuthnRequest = (args: {
+  connection: Pick<e.SpConnection, "spEntityId" | "spAcsUrl">,
+  details: Pick<e.AuthnRequestDetails, "issuer" | "acsUrl">,
+}): r.VoidResult => {
+  const { connection, details } = args
+  if(details.issuer !== connection.spEntityId) {
+    return r.fail("Invalid Issuer")
+  }
+  if (details.acsUrl !== connection.spAcsUrl) {
+    return r.fail("Unmatched ACS URL")
+  }
+  return r.voidResult
+}
+
 export const generateAssertion = async (args: {
     connection: e.SpConnection,
     requestId: string,
