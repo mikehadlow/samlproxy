@@ -24,17 +24,11 @@ This is a monorepo containing 3 packages:
 1. `testsp`: This is a test SAML service provider (SP). This mimics the application that needs to authenticate.
 1. `testidp`: This is test SAML identity provider (IdP). This mimics an identity provider, such as Okta or Auth0.
 
-All 3 packages run together using the [overmind](https://github.com/DarthSim/overmind) process manager. Install it with:
-```zsh
-brew install tmux
-brew install overmind
-```
-
 Start with:
 ```zsh
 bun run dev
 ```
-Overmind will start all three processes at the following URLs:
+The script `scripts/cluster.ts` will start all three processes at the following URLs:
 
 | process | URL |
 |---|---|
