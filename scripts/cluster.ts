@@ -19,7 +19,7 @@ const processOptions = (args: { package: string; port: number }) =>
   }) as const;
 
 const run = async () => {
-  // Spawn your web server processes
+  // Spawn the web server processes
   const proxy = spawn(processOptions({ package: "proxy", port: 7272 }));
   const sp = spawn(processOptions({ package: "testsp", port: 7282 }));
   const idp = spawn(processOptions({ package: "testidp", port: 7292 }));
