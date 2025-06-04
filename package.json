@@ -5,6 +5,6 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "direnv allow; overmind start -p 7272 -P 10"
+    "dev": "bun scripts/cluster.ts"
   }
 }
