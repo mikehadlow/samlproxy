@@ -24,19 +24,17 @@ const session = z.object({
 })
 type Session = z.infer<typeof session>
 
-const env = {
-  jwtSecret: process.env["TEST_SP_JWT_SECRET"] ?? ""
-}
+const env = z.object({
+  jwtSecret: z.string().min(32),
+}).parse({
+  jwtSecret: process.env["TEST_SP_JWT_SECRET"],
+})
 
 const authCookieName = "sp_auth"
 
 const app = new Hono()
 app.use(logger())
 const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (async (c, next) => {
-  // don't authenticate the login or acs paths
-  if (c.req.path === "/login" || c.req.path === "/acs") {
-    await next()
-  }
   const token = getCookie(c, authCookieName)
   if (!token) {
     return c.redirect("/login")
@@ -52,8 +50,8 @@ const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (a
   }
   await next()
 })
-app.use(authMiddleware)
 
+// Home is the only JWT protected route.
 app.get("/", authMiddleware, async (c) => {
   const props = {
     siteData: {

@@ -25,9 +25,19 @@ const session = z.object({
 })
 type Session = z.infer<typeof session>
 
-const env = {
-  jwtSecret: process.env["TEST_IDP_JWT_SECRET"] ?? ""
-}
+const env = z.object({
+  jwtSecret: z.string().min(32),
+  certPw: z.string().min(6),
+  idpBaseUrl: z.url(),
+  spBaseUrl: z.url(),
+  proxyBaseUrl: z.url(),
+}).parse({
+  jwtSecret: process.env["TEST_IDP_JWT_SECRET"],
+  certPw: process.env["TEST_IDP_CERT_PW"],
+  idpBaseUrl: process.env["TEST_IDP_URL_BASE"],
+  spBaseUrl: process.env["TEST_SP_URL_BASE"],
+  proxyBaseUrl: process.env["SAML_PROXY_URL_BASE"],
+})
 
 const readKey = (key:string) => fs.readFileSync(path.join(__dirname, "keys", key), "utf8")
 const encryptKey = readKey("encryptKey.pem")
@@ -35,14 +45,14 @@ const encryptionCert = readKey("encryptionCert.cer")
 
 const connection: saml.SpConnection = {
   // IdP (my) properties
-  idpEntityId: "http://localhost:7292/test-idp",
-  idpSsoUrl: "http://localhost:7292/sso",
+  idpEntityId: `${ env.idpBaseUrl }/test-idp`,
+  idpSsoUrl: `${ env.idpBaseUrl }/sso`,
   privateKey: encryptKey,
-  privateKeyPassword: "foobar",
+  privateKeyPassword: env.certPw,
   signingCertificate: encryptionCert,
   // SP (their) properties
-  spEntityId: "http://localhost:7282/test-sp",
-  spAcsUrl: "http://localhost:7282/acs",
+  spEntityId: `${ env.spBaseUrl }/test-sp`,
+  spAcsUrl: `${ env.spBaseUrl }/acs`,
 }
 
 const authCookieName = "idp_auth"
@@ -53,10 +63,6 @@ const app = new Hono()
 app.use(logger())
 
 const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (async (c, next) => {
-  // don't authenticate the login path
-  if (c.req.path === "/login") {
-    await next()
-  }
   // if the AuthnRequest hits the /sso path, but the user hasn't already logged in
   // this authMiddleware will bounce them through the login process. After they've
   // authenticated, we'll redirect them to /sso. Here we pass the orginal authnRequest
@@ -80,7 +86,6 @@ const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (a
   }
   await next()
 })
-app.use(authMiddleware)
 
 app.get("/", authMiddleware, async (c) => {
   return c.html(html.Home({ siteData: siteData("IdP Home"), ...c.var.session }))
