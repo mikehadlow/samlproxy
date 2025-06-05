@@ -1,0 +1,52 @@
+import { expect, test, describe } from "bun:test"
+import * as r from "common/result"
+import * as db from "./db"
+import * as e from "./entity"
+
+describe("db", () => {
+  test("snakeToCamel should work", () => {
+    const input = {
+      hello_world: "Hello World",
+      a_number: 123,
+    }
+    const expected = {
+      helloWorld: input.hello_world,
+      aNumber: input.a_number,
+    }
+    expect(db.snakeToCamel(input)).toEqual(expected)
+  })
+
+  test("insert and select sp_connection should work", () => {
+    const connection: e.SpConnection = {
+      idpEntityId: "some-IdP-entity-id",
+      idpSsoUrl: "https://example-idp.com/sso",
+      privateKey: "some-long-string-lets-make-this-really-long",
+      privateKeyPassword: "a-password",
+      signingCertificate: "some-other-long-string-lets-make-this-really-long",
+      spEntityId: "some-SP-entity-id",
+      spAcsUrl: "https://example-sp/acs",
+    }
+    const con = db.createDb([db.createCommonTables])
+    db.insertSpConnection(con, connection)
+    const result = db.getSpConnection(con, connection)
+    expect(r.isOk(result)).toBeTrue()
+    if(r.isFail(result)) throw new Error("type coertion")
+    expect(result.value).toEqual(connection)
+  })
+
+  test("insert and select idp_connection should work", () => {
+    const connection: e.IdpConnection = {
+      signingCertificate: "some-long-string-lets-make-this-really-long",
+      spEntityId: "some-SP-entity-id",
+      spAcsUrl: "https://example-sp/acs",
+      idpEntityId: "some-IdP-entity-id",
+      idpSsoUrl: "https://example-idp.com/sso",
+    }
+    const con = db.createDb([db.createCommonTables])
+    db.insertIdpConnection(con, connection)
+    const result = db.getIdpConnection(con, connection)
+    expect(r.isOk(result)).toBeTrue()
+    if(r.isFail(result)) throw new Error("type coertion")
+    expect(result.value).toEqual(connection)
+  })
+})

@@ -3,7 +3,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./result": "./src/result.ts",
-    "./saml": "./src/saml.ts"
+    "./saml": "./src/saml.ts",
+    "./db": "./src/db.ts"
   },
   "module": "src/index.ts",
   "type": "module",

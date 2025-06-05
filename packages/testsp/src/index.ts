@@ -6,7 +6,8 @@ import * as r from "common/result"
 import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
-import * as db from "./db"
+import { recordRelayState, consumeRelayState, spPrivateTables } from "./db"
+import { createDb } from "common/db"
 import { connection } from "./connection"
 import * as html from "./html"
 
@@ -31,6 +32,8 @@ const env = z.object({
 })
 
 const authCookieName = "sp_auth"
+
+const con = createDb([ spPrivateTables ])
 
 const app = new Hono()
 app.use(logger())
@@ -87,7 +90,7 @@ app.post("/login", async (c) => {
   const relayState = `rs-${crypto.randomUUID()}`
 
   // record the relaystate and email in the db
-  db.recordRelayState({
+  recordRelayState(con, {
     relayState,
     email: login.username,
   })
@@ -106,7 +109,7 @@ app.post("/acs", async (c) => {
   console.log("Assertion from IdP: ", assertionExtract.issuer)
 
   // validate the relayState
-  const relayStateResult = db.consumeRelayState({ relayState: form.RelayState })
+  const relayStateResult = consumeRelayState(con, { relayState: form.RelayState })
   const emailCheckResult = r.bind(
     relayStateResult,
     (relayState) => relayState.email === assertionExtract.nameID

@@ -1,0 +1,111 @@
+import { Database } from "bun:sqlite"
+import * as fs from "fs"
+import * as e from "./entity"
+import * as r from "./result"
+
+const createSql = `${__dirname}/db.sql`
+
+export const snakeToCamel = (snake: Record<string, any>): Record<string, any> => {
+  const toCamel = (str: string) => str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+  return Object.keys(snake).reduce((acc: Record<string, any>, current: string) => {
+    acc[toCamel(current)] = snake[current]
+    return acc
+  }, {})
+}
+
+export const createDb = (creationScripts: ((db:Database) => void)[]) => {
+  const db = new Database(":memory:", {
+    strict: true,
+  })
+  for (const create of creationScripts) {
+    create(db)
+  }
+  return db
+}
+
+export const createCommonTables = (db: Database): void => {
+  const sql = fs.readFileSync(createSql, "utf-8")
+  db.exec(sql)
+}
+
+export const insertIdpConnection = (db: Database, connection: e.IdpConnection): void => {
+  // acts as a validator here
+  e.idpConnectionParser.parse(connection)
+  using query = db.query(`
+    INSERT INTO idp_connection (
+      sp_entity_id,
+      sp_acs_url,
+      idp_entity_id,
+      idp_sso_url,
+      signing_certificate
+    )
+    VALUES (
+      $spEntityId,
+      $spAcsUrl,
+      $idpEntityId,
+      $idpSsoUrl,
+      $signingCertificate
+    );`)
+  query.run(connection)
+}
+
+export const getIdpConnection = (db: Database, args: { idpEntityId: string }): r.Result<e.IdpConnection> => {
+  using query = db.query(`
+    SELECT
+      sp_entity_id,
+      sp_acs_url,
+      idp_entity_id,
+      idp_sso_url,
+      signing_certificate
+    FROM idp_connection
+    WHERE idp_entity_id = $idpEntityId
+    `)
+  const result = query.get(args)
+  return (result)
+    ? r.from(e.idpConnectionParser.parse(snakeToCamel(result)))
+    : r.fail("Invalid IdP entity ID. No connection found")
+}
+
+export const insertSpConnection = (db: Database, connection: e.SpConnection): void => {
+  // acts as a validator here
+  e.spConnectionParser.parse(connection)
+  using query = db.query(`
+    INSERT INTO sp_connection (
+      idp_entity_id,
+      idp_sso_url,
+      private_key,
+      private_key_password,
+      signing_certificate,
+      sp_entity_id,
+      sp_acs_url
+    )
+    VALUES (
+      $idpEntityId,
+      $idpSsoUrl,
+      $privateKey,
+      $privateKeyPassword,
+      $signingCertificate,
+      $spEntityId,
+      $spAcsUrl
+    );`)
+  query.run(connection)
+}
+
+export const getSpConnection = (db: Database, args: { spEntityId: string }): r.Result<e.SpConnection> => {
+  using query = db.query(`
+    SELECT
+      idp_entity_id,
+      idp_sso_url,
+      private_key,
+      private_key_password,
+      signing_certificate,
+      sp_entity_id,
+      sp_acs_url
+    FROM sp_connection
+    WHERE sp_entity_id = $spEntityId
+    `)
+  const result = query.get(args)
+  return (result)
+    ? r.from(e.spConnectionParser.parse(snakeToCamel(result)))
+    : r.fail("Invalid SP entity ID. No connection found")
+}

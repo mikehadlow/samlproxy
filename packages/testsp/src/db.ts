@@ -1,11 +1,8 @@
 import { Database } from "bun:sqlite"
 import * as fs from "fs"
-import * as path from "path"
 import * as z from "zod/v4"
 import * as r from "common/result"
 
-const dbFolder = `${__dirname}/../db`
-const dbPath = path.join(dbFolder, "db.sqlite3")
 const createSql = `${__dirname}/db.sql`
 
 const relayStateParser = z.object({
@@ -16,26 +13,13 @@ const relayStateParser = z.object({
 })
 type RelayState = z.infer<typeof relayStateParser>
 
-const openDb = () => new Database(dbPath, {
-  create: true,
-  strict: true,
-})
-
-const init = () => {
-  if (!fs.existsSync(dbPath)) {
-    // create the database
-    using db = openDb()
-
-    // run the create table statements
-    const sql = fs.readFileSync(createSql, "utf-8")
-    using query = db.query(sql)
-    query.run()
-  }
+export const spPrivateTables = (db: Database) => {
+  const sql = fs.readFileSync(createSql, "utf-8")
+  db.exec(sql)
 }
 
-export const recordRelayState = (args: { relayState: string, email: string }) => {
+export const recordRelayState = (db: Database, args: { relayState: string, email: string }) => {
   const { relayState, email } = args
-  using db = openDb()
   using query = db.query(`INSERT INTO relay_state
     ( relay_state, email, timestamp, used )
     VALUES (
@@ -52,9 +36,8 @@ export const recordRelayState = (args: { relayState: string, email: string }) =>
   })
 }
 
-export const consumeRelayState = (args: { relayState: string }): r.Result<RelayState> => {
+export const consumeRelayState = (db: Database, args: { relayState: string }): r.Result<RelayState> => {
   const { relayState } = args
-  using db = openDb()
   using query = db.query(`SELECT relay_state, email, timestamp, used
     FROM relay_state
     WHERE relay_state = $relayState
@@ -73,5 +56,3 @@ export const consumeRelayState = (args: { relayState: string }): r.Result<RelayS
   })
   return r.from(relayStateParser.parse(result))
 }
-
-init()
