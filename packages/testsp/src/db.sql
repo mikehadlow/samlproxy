@@ -5,3 +5,9 @@ CREATE TABLE relay_state (
     used INT -- 1 or 0
 ) STRICT
 ;
+
+CREATE TABLE user (
+    email TEXT PRIMARY KEY,
+    idp_entity_id TEXT
+)
+;

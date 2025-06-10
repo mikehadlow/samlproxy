@@ -1,4 +1,4 @@
-import { recordRelayState, consumeRelayState, spPrivateTables } from "./db"
+import { recordRelayState, consumeRelayState, createUser, getUser, spPrivateTables } from "./db"
 import { createDb } from "common/db"
 import { expect, test, describe } from "bun:test"
 import * as r from "common/result"
@@ -19,7 +19,7 @@ describe("db", () => {
 
     // assert that the relayState is correct
     expect(r.isOk(result)).toBeTrue()
-    if(r.isFail(result)) throw Error("expected OK here!") // irritating need for type coeertion
+    if(r.isFail(result)) throw new Error("expected OK here!") // irritating need for type coeertion
     expect(result.value.relay_state).toEqual(args.relayState)
     expect(result.value.email).toEqual(args.email)
     expect(result.value.timestamp).toBeNumber()
@@ -31,5 +31,24 @@ describe("db", () => {
     // assert failure a second time
     // because the relayState has been used
     expect(r.isFail(result2)).toBeTrue()
+  })
+
+  test("createUser should create SpUser, getUser should return the same", () => {
+    const args = {
+      email: "joe@blogs.com",
+      idpEntityId: "the-IdP-Entity-Id",
+    }
+    const con = createDb([spPrivateTables])
+
+    // create the user
+    createUser(con, args)
+
+    // get the user
+    const result = getUser(con, args)
+
+    // assert that the returned user is correct
+    expect(r.isOk(result)).toBeTrue()
+    if(r.isFail(result)) throw new Error("type coertion")
+    expect(result.value).toEqual(args)
   })
 })

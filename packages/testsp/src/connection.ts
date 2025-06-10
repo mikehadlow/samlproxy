@@ -1,6 +1,9 @@
+import { Database } from "bun:sqlite"
 import * as saml from "common/saml"
+import { createUser } from "./db"
+import { insertIdpConnection } from "common/db"
 
-export const connection: saml.IdpConnection = {
+const connection: saml.IdpConnection = {
   // SP (my) properties
   spEntityId: "http://localhost:7282/test-sp",
   spAcsUrl: "http://localhost:7282/acs",
@@ -39,4 +42,14 @@ export const connection: saml.IdpConnection = {
   IwcCOyy436Lf//f3NdRWduszRavJK7uPgtgHBnoqYtEh13LkybMRI+epVys4reFu
   dWSssB+v4QtZhhvlG2CScPDhtN910uzIX6YYD9CPWXU1ptNm8l9O8EVKdNloYlU=
   -----END CERTIFICATE-----`,
+}
+
+// This test SP uses an in-memory database, so it must be initialised
+// with some values on startup.
+export const initializeDb = (db: Database) => {
+  insertIdpConnection(db, connection)
+  createUser(db, {
+    email: "joe@blogs.com",
+    idpEntityId: connection.idpEntityId,
+  })
 }

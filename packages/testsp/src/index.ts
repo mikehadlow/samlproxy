@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { logger } from 'hono/logger'
 import * as saml from "common/saml"
 import { z } from "zod/v4"
@@ -6,9 +6,9 @@ import * as r from "common/result"
 import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
-import { recordRelayState, consumeRelayState, spPrivateTables } from "./db"
-import { createDb } from "common/db"
-import { connection } from "./connection"
+import { recordRelayState, consumeRelayState, spPrivateTables, getUser } from "./db"
+import { createDb, createIdpConnectionTable, getIdpConnection } from "common/db"
+import { initializeDb } from "./connection"
 import * as html from "./html"
 
 const loginForm = z.object({
@@ -33,7 +33,8 @@ const env = z.object({
 
 const authCookieName = "sp_auth"
 
-const con = createDb([ spPrivateTables ])
+const con = createDb([ spPrivateTables, createIdpConnectionTable ])
+initializeDb(con)
 
 const app = new Hono()
 app.use(logger())
@@ -53,6 +54,28 @@ const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (a
   }
   await next()
 })
+
+const errorResult = (c: Context, fail: r.Fail) => {
+  const errorProps = (typeof fail.message === "string")
+    ? {
+      status: 401,
+      title: "Not Authenticated",
+      message: fail.message
+    } as const
+    : {
+      status: 500,
+      title: "Internal Server Error",
+      message: "Oh dear, a bug. See logs for details.",
+    } as const
+  const props = {
+    siteData: {
+      title: "SP Error",
+    },
+    ... errorProps,
+  }
+  c.status(props.status)
+  return c.html(html.Error(props))
+}
 
 // Home is the only JWT protected route.
 app.get("/", authMiddleware, async (c) => {
@@ -81,50 +104,59 @@ app.get("/login", (c) => {
 
 app.post("/login", async (c) => {
   const body = await c.req.parseBody()
-  const login = loginForm.parse(body)
-  console.log("login.username", login.username)
-
-  // at this point we would use the entered email address to choose
-  // the IdP which we want to use to authenticate the user
-  // but now simply redirect to the test IdP
-  const relayState = `rs-${crypto.randomUUID()}`
-
-  // record the relaystate and email in the db
-  recordRelayState(con, {
-    relayState,
-    email: login.username,
+  const loginResult = r.attempt(() => loginForm.parse(body))
+  r.run(loginResult, (login) => console.log("login.username", login.username))
+  const userResult = r.bind(loginResult, (login) => getUser(con, { email: login.username }))
+  const connectionResult = r.bind(userResult, (user) => getIdpConnection(con, { idpEntityId: user.idpEntityId }))
+  const aunthnRequestResult = r.map(connectionResult, (connection) => {
+    // record the relaystate and email in the db
+    const relayState = `rs-${crypto.randomUUID()}`
+    r.run(userResult, (user) => {
+      recordRelayState(con, {
+        relayState,
+        email: user.email,
+      })
+    })
+    // finally redirect to the IdP
+    return saml.generateAuthnRequest({ connection, relayState })
   })
 
-  // finally redirect to the IdP
-  const result = saml.generateAuthnRequest({ connection, relayState })
-  return c.redirect(result.url)
+  if (r.isOk(aunthnRequestResult)) {
+    return c.redirect(aunthnRequestResult.value.url)
+  }
+  return errorResult(c, aunthnRequestResult)
 })
 
 app.post("/acs", async (c) => {
   const body = await c.req.parseBody()
-  const form = assertionForm.parse(body)
-  const assertionExtract = saml.parseAssertion(form.SAMLResponse)
+  const formResult = r.attempt(() => assertionForm.parse(body))
+  const assertionExtractResult = r.map(formResult, (form) => saml.parseAssertion(form.SAMLResponse))
 
-  // TODO: Here we can lookup the correct connection for this Assertion
-  console.log("Assertion from IdP: ", assertionExtract.issuer)
+  const connectionResult = r.bind(
+    assertionExtractResult,
+    (assertionExtract) => getIdpConnection(con, { idpEntityId: assertionExtract.issuer }))
+
+  let contextResult = r.merge3(formResult, assertionExtractResult, connectionResult)
 
   // validate the relayState
-  const relayStateResult = consumeRelayState(con, { relayState: form.RelayState })
-  const emailCheckResult = r.bind(
-    relayStateResult,
-    (relayState) => relayState.email === assertionExtract.nameID
-      ? r.from(true)
-      : r.fail(`SP Error invalid email: expected: ${relayState.email}, got: ${assertionExtract.nameID}`)
-  )
+  contextResult = r.validate(contextResult, (ctx) => {
+    const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
+    return r.bind(
+      relayStateResult,
+      (relayState) => relayState.email === ctx.b.nameID
+        ? r.voidResult
+        : r.fail(`SP Error invalid email: expected: ${relayState.email}, got: ${ctx.b.nameID}`)
+    )
+  })
 
   // validate the assertion certificate etc
-  const assertionResult = await r.bindAsync(
-    emailCheckResult,
-    () => saml.validateAssertion({ connection, encodedAssertion: form.SAMLResponse }))
+  contextResult = await r.validateAsync(
+    contextResult,
+    (ctx) => saml.validateAssertion({ connection: ctx.c, encodedAssertion: ctx.a.SAMLResponse }))
 
-  const result = r.map(assertionResult, () => {
-    // We've successfully validated the SAML Assertion, so now we can issue a JWT for our application
-    const session: Session = { username: assertionExtract.nameID }
+  // We've successfully validated the SAML Assertion, so now we can issue a JWT for our application
+  r.run(contextResult, (ctx) => {
+    const session: Session = { username: ctx.b.nameID }
     const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
     setCookie(c, authCookieName, token, {
       httpOnly: true,
@@ -133,30 +165,12 @@ app.post("/acs", async (c) => {
     })
   })
 
-  if (r.isOk(result)) {
+  if (r.isOk(contextResult)) {
     return c.redirect("/")
   }
   else {
-    console.log(`SP Error validating assertion: ${result.message}`)
-    const errorProps = (typeof result.message === "string")
-      ? {
-        status: 401,
-        title: "Not Authenticated",
-        message: result.message
-      } as const
-      : {
-        status: 500,
-        title: "Internal Server Error",
-        message: "Oh dear, a bug. See logs for details.",
-      } as const
-    const props = {
-      siteData: {
-        title: "SP Error",
-      },
-      ... errorProps,
-    }
-    c.status(props.status)
-    return c.html(html.Error(props))
+    console.log(`SP Error validating assertion: ${contextResult.message}`)
+    return errorResult(c, contextResult)
   }
 })
 

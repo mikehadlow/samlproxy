@@ -2,6 +2,8 @@ import { Database } from "bun:sqlite"
 import * as fs from "fs"
 import * as z from "zod/v4"
 import * as r from "common/result"
+import { spUserParser, type SpUser } from "./entity"
+import { snakeToCamel } from "common/db"
 
 const createSql = `${__dirname}/db.sql`
 
@@ -55,4 +57,19 @@ export const consumeRelayState = (db: Database, args: { relayState: string }): r
     relayState,
   })
   return r.from(relayStateParser.parse(result))
+}
+
+export const createUser = (db: Database, args: { email: string, idpEntityId: string }) => {
+  using query = db.query(`INSERT INTO user ( email, idp_entity_id )
+    VALUES ( $email, $idpEntityId );`)
+  query.run(args)
+}
+
+export const getUser = (db: Database, args: { email: string }): r.Result<SpUser> => {
+  using query = db.query(`SELECT email, idp_entity_id FROM user WHERE email = $email;`)
+  const result = query.get(args)
+  if (!result) {
+    return r.fail("Invalid email.")
+  }
+  return r.from(spUserParser.parse(snakeToCamel(result)))
 }

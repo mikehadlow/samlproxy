@@ -150,7 +150,7 @@ export const generateAssertion = async (args: {
 export const validateAssertion = async (args: {
   connection: e.IdpConnection,
   encodedAssertion: string,
-}): Promise<r.Result<boolean>> => {
+}): Promise<r.VoidResult> => {
   const {
     connection,
     encodedAssertion,
@@ -183,7 +183,7 @@ export const validateAssertion = async (args: {
   }
   try {
     await sp.parseLoginResponse(idp, 'post', request);
-    return r.from(true)
+    return r.voidResult
   }
   catch (error) {
     console.error(error)
