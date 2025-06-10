@@ -53,6 +53,8 @@ export const run = <A>(a: Result<A>, func: (a: A) => void): Result<A> => {
 // into Fail types
 export const attempt = <A>(func: () => A): Result<A> =>  map(from(true), func)
 
+// merge results together into a shared context. This is mainly to avoid deeply nested
+// closures
 export const merge2 = <A, B>(a: Result<A>, b: Result<B>): Result<{ a: A, b: B }> =>
   isFail(a) ? a
   : isFail(b) ? b
@@ -90,6 +92,11 @@ export const mapAsync = async <A, B>(a: Result<A>, func: (a: A) => Promise<B>): 
 export const validateAsync = async <A>(a: Result<A>, func: (a: A) => Promise<VoidResult>): Promise<Result<A>> => {
   const result = await bindAsync(a, func)
   return isOk(result) ? a : result
+}
+
+export const runAsync = async <A>(a: Result<A>, func: (a: A) => Promise<void>): Promise<Result<A>> => {
+  await mapAsync(a, func)
+  return a
 }
 
 // type narrowing
