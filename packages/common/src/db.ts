@@ -3,7 +3,9 @@ import * as fs from "fs"
 import * as e from "./entity"
 import * as r from "./result"
 
-const createSql = `${__dirname}/db.sql`
+const sqlDir = `${__dirname}/sql`
+const idp_connection_sql = `${sqlDir}/idp_connection.sql`
+const sp_connection_sql = `${sqlDir}/sp_connection.sql`
 
 export const snakeToCamel = (snake: Record<string, any>): Record<string, any> => {
   const toCamel = (str: string) => str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
@@ -23,8 +25,13 @@ export const createDb = (creationScripts: ((db:Database) => void)[]) => {
   return db
 }
 
-export const createCommonTables = (db: Database): void => {
-  const sql = fs.readFileSync(createSql, "utf-8")
+export const createIdpConnectionTable = (db: Database): void => {
+  const sql = fs.readFileSync(idp_connection_sql, "utf-8")
+  db.exec(sql)
+}
+
+export const createSpConnectionTable = (db: Database): void => {
+  const sql = fs.readFileSync(sp_connection_sql, "utf-8")
   db.exec(sql)
 }
 

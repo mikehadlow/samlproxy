@@ -26,7 +26,7 @@ describe("db", () => {
       spEntityId: "some-SP-entity-id",
       spAcsUrl: "https://example-sp/acs",
     }
-    const con = db.createDb([db.createCommonTables])
+    const con = db.createDb([db.createSpConnectionTable])
     db.insertSpConnection(con, connection)
     const result = db.getSpConnection(con, connection)
     expect(r.isOk(result)).toBeTrue()
@@ -42,7 +42,7 @@ describe("db", () => {
       idpEntityId: "some-IdP-entity-id",
       idpSsoUrl: "https://example-idp.com/sso",
     }
-    const con = db.createDb([db.createCommonTables])
+    const con = db.createDb([db.createIdpConnectionTable])
     db.insertIdpConnection(con, connection)
     const result = db.getIdpConnection(con, connection)
     expect(r.isOk(result)).toBeTrue()
