@@ -1,13 +1,13 @@
+import { getSpConnection } from "common/db"
 import * as r from "common/result"
 import * as saml from "common/saml"
-import * as fs from "fs"
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
 import { logger } from 'hono/logger'
 import * as jwt from "jsonwebtoken"
-import * as path from "path"
 import { z } from "zod/v4"
+import { initDb } from "./db"
 import * as html from "./html"
 
 const loginForm = z.object({
@@ -25,40 +25,17 @@ const session = z.object({
 })
 type Session = z.infer<typeof session>
 
-const env = z.object({
-  jwtSecret: z.string().min(32),
-  certPw: z.string().min(6),
-  idpBaseUrl: z.url(),
-  spBaseUrl: z.url(),
-  proxyBaseUrl: z.url(),
-}).parse({
-  jwtSecret: process.env["TEST_IDP_JWT_SECRET"],
-  certPw: process.env["TEST_IDP_CERT_PW"],
-  idpBaseUrl: process.env["TEST_IDP_URL_BASE"],
-  spBaseUrl: process.env["TEST_SP_URL_BASE"],
-  proxyBaseUrl: process.env["SAML_PROXY_URL_BASE"],
-})
-
-const readKey = (key:string) => fs.readFileSync(path.join(__dirname, "keys", key), "utf8")
-const encryptKey = readKey("encryptKey.pem")
-const encryptionCert = readKey("encryptionCert.cer")
-
-const connection: saml.SpConnection = {
-  // IdP (my) properties
-  idpEntityId: `${ env.idpBaseUrl }/test-idp`,
-  idpSsoUrl: `${ env.idpBaseUrl }/sso`,
-  privateKey: encryptKey,
-  privateKeyPassword: env.certPw,
-  signingCertificate: encryptionCert,
-  // SP (their) properties
-  spEntityId: `${ env.spBaseUrl }/test-sp`,
-  spAcsUrl: `${ env.spBaseUrl }/acs`,
-}
-
 const authCookieName = "idp_auth"
 const redirectQueryParam = "redirect_to"
 const siteData = (title: string): html.SiteData => ({ title })
 
+const env = z.object({
+  jwtSecret: z.string().min(32),
+}).parse({
+  jwtSecret: process.env["TEST_IDP_JWT_SECRET"],
+})
+
+const con = initDb()
 const app = new Hono()
 app.use(logger())
 
@@ -86,6 +63,29 @@ const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (a
   }
   await next()
 })
+
+const errorResult = (c: Context, fail: r.Fail) => {
+  const errorProps = (typeof fail.message === "string")
+    ? {
+      status: 401,
+      title: "Not Authenticated",
+      message: fail.message
+    } as const
+    : {
+      status: 500,
+      title: "Internal Server Error",
+      message: "Oh dear, a bug. See logs for details.",
+    } as const
+  const props = {
+    siteData: {
+      title: "SP Error",
+    },
+    ... errorProps,
+  }
+  c.status(props.status)
+  return c.html(html.Error(props))
+}
+
 
 app.get("/", authMiddleware, async (c) => {
   return c.html(html.Home({ siteData: siteData("IdP Home"), ...c.var.session }))
@@ -120,48 +120,40 @@ app.post("/login", async (c) => {
 })
 
 app.get("/sso", authMiddleware, async (c) => {
-  const request = authnRequest.parse(c.req.query())
-  console.log("SAMLRequest", request.SAMLRequest)
-  console.log("RelayState", request.RelayState)
+  const requestResult = r.attempt(() => authnRequest.parse(c.req.query()))
 
-  const parseResult = saml.parseAuthnRequest({ authnRequest: request.SAMLRequest })
+  const parseResult = r.bind(requestResult,
+    (request) => saml.parseAuthnRequest({ authnRequest: request.SAMLRequest }))
 
-  const validationResult = r.validate(parseResult, (details) => saml.validateAuthnRequest({ connection, details }))
+  // TODO: check that logged in user has access to the given connection
 
-  const assertionProps = r.map(validationResult, (authnReq) => ({
+  const connectionResult = r.bind(parseResult,
+    (request) => getSpConnection(con, { spEntityId: request.issuer }))
+
+  const ctx1 = r.merge2(parseResult, connectionResult)
+  const validationResult = r.validate(ctx1,
+    (ctx) => saml.validateAuthnRequest({ connection: ctx.b, details: ctx.a }))
+
+  const ctx2 = r.merge3(requestResult, parseResult, validationResult)
+  const assertionProps = r.map(ctx2,
+    (ctx) => ({
     user: {
       email: c.var.session.username
     },
-    relayState: request.RelayState,
-    requestId: authnReq.id,
+    relayState: ctx.a.RelayState,
+    requestId: ctx.b.id,
   }))
 
-  const result = await r.mapAsync(assertionProps, (props) =>   saml.generateAssertion({ connection, ...props }))
+  const ctx3 = r.merge2(connectionResult, assertionProps)
+  const result = await r.mapAsync(ctx3,
+    (ctx) =>   saml.generateAssertion({ connection: ctx.a, ...ctx.b }))
 
   if (r.isOk(result)) {
     return c.html(html.Assertion(result.value))
   }
   else {
     console.log(`IdP Error validating authnRequest: ${result.message}`)
-    const errorProps = (typeof result.message === "string")
-      ? {
-        status: 401,
-        title: "Not Authenticated",
-        message: result.message
-      } as const
-      : {
-        status: 500,
-        title: "Internal Server Error",
-        message: "Oh dear, a bug. See logs for details.",
-      } as const
-    const props = {
-      siteData: {
-        title: "IdP Error",
-      },
-      ... errorProps,
-    }
-    c.status(props.status)
-    return c.html(html.Error(props))
+    return errorResult(c, result)
   }
 })
 
