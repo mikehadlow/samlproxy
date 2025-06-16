@@ -4,7 +4,8 @@
     ".": "./src/index.ts",
     "./result": "./src/result.ts",
     "./saml": "./src/saml.ts",
-    "./db": "./src/db.ts"
+    "./db": "./src/db.ts",
+    "./keys": "./src/keys.ts"
   },
   "module": "src/index.ts",
   "type": "module",
