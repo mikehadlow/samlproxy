@@ -8,6 +8,10 @@ type Keys = {
   certificate: string,
 }
 
+type Certificate = {
+  certificate: string,
+}
+
 export const loadKeys = (args: {
   keysBasePath: string,
   encryptionKeyFile: string,
@@ -32,6 +36,23 @@ export const loadKeys = (args: {
   return r.from({
     encryptionKey,
     encryptionKeyPw,
+    certificate,
+  })
+}
+
+export const loadCertificate = (args: {
+  keysBasePath: string,
+  certificateFile: string,
+}): r.Result<Certificate> => {
+  const {
+    keysBasePath,
+    certificateFile,
+  } = args
+  const certificate = fs.readFileSync(path.join(keysBasePath, certificateFile), "utf-8")
+  if (!certificate) {
+    return r.fail("Missing certificate")
+  }
+  return r.from({
     certificate,
   })
 }
