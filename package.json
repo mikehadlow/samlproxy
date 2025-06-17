@@ -5,6 +5,6 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun scripts/cluster.ts"
+    "dev": "bunx tsc --noEmit; bun scripts/cluster.ts"
   }
 }
