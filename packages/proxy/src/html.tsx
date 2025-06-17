@@ -54,3 +54,35 @@ export const Error = (props: {
       </div>
   </Layout>
 )
+
+export const Assertion = (props: {
+  acsUrl: string,
+  assertion: string,
+  relayState: string,
+}) =>
+  html`
+  <!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="utf-8">
+      <title>IdP Assertion</title>
+  </head>
+  <body>
+      <section class="section">
+          <div class="container">
+              <h1 class="title">IdP Assertion</h1>
+              <form id="assertion-form" method="post" action="${props.acsUrl}" ...>
+                <input type="hidden" name="SAMLResponse" value="${props.assertion}" />
+                <input type="hidden" name="RelayState" value="${props.relayState}" />
+                <input class="button" type="submit" value="Submit" />
+              </form>
+          </div>
+      </section>
+  </body>
+  <script lang="ecmascript">
+    // auto form submission
+    const myForm = document.getElementById("assertion-form");
+    myForm.submit();
+  </script>
+  </html>
+  `

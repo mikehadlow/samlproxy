@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite"
 import { z } from "zod/v4"
 import * as saml from "common/saml"
 import { insertSpConnection, insertIdpConnection } from "common/db"
+import { createLink } from "./db"
 import { loadKeys, loadCertificate } from "common/keys"
 import * as r from "common/result"
 
@@ -68,4 +69,9 @@ export const initializeConnections = (db: Database) => {
     signingCertificate: idpCertificate,
   }
   insertIdpConnection(db, idpConnection)
+
+  createLink(db, {
+    spEntityId: spConnection.spEntityId,
+    idpEntityId: idpConnection.idpEntityId,
+  })
 }
