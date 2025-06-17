@@ -83,12 +83,12 @@ const errorResult = (c: Context, fail: r.Fail) => {
     ... errorProps,
   }
   c.status(props.status)
-  return c.html(html.Error(props))
+  return c.html(html.Error(props).toString())
 }
 
 
 app.get("/", authMiddleware, async (c) => {
-  return c.html(html.Home({ siteData: siteData("IdP Home"), ...c.var.session }))
+  return c.html(html.Home({ siteData: siteData("IdP Home"), ...c.var.session }).toString())
 })
 
 app.get("/logout", (c) => {
@@ -98,7 +98,7 @@ app.get("/logout", (c) => {
 
 app.get("/login", (c) => {
   const redirectTo = c.req.query(redirectQueryParam) ?? "/"
-  return c.html(html.Login({ siteData: siteData("IdP Login"), redirectTo }))
+  return c.html(html.Login({ siteData: siteData("IdP Login"), redirectTo }).toString())
 })
 
 app.post("/login", async (c) => {

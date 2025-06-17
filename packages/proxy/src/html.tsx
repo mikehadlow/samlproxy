@@ -21,10 +21,10 @@ const Layout = (props: SiteData) =>
 
 export const Home = (props: { siteData: SiteData }) => (
   <Layout {...props.siteData }>
-      <div class="container">
-          <section class="section">
-              <div class="block">
-                  <h1 class="title">SAML Proxy</h1>
+      <div className="container">
+          <section className="section">
+              <div className="block">
+                  <h1 className="title">SAML Proxy</h1>
                   <p>Welcome to SAML Proxy.</p>
                   <p>
                       There's nothing to see here at root.
@@ -41,14 +41,14 @@ export const Error = (props: {
   title: string,
   message: string }) => (
   <Layout {...props.siteData }>
-      <div class="container">
-          <section class="section">
-              <div class="block">
-                  <h1 class="title">{props.status} {props.title}</h1>
+      <div className="container">
+          <section className="section">
+              <div className="block">
+                  <h1 className="title">{props.status} {props.title}</h1>
                   <p>{props.message}</p>
               </div>
-              <div class="block">
-                  <a class="button is-primary" href="/">Home</a>
+              <div className="block">
+                  <a className="button is-primary" href="/">Home</a>
               </div>
           </section>
       </div>
@@ -68,13 +68,13 @@ export const Assertion = (props: {
       <title>IdP Assertion</title>
   </head>
   <body>
-      <section class="section">
-          <div class="container">
-              <h1 class="title">IdP Assertion</h1>
+      <section className="section">
+          <div className="container">
+              <h1 className="title">IdP Assertion</h1>
               <form id="assertion-form" method="post" action="${props.acsUrl}" ...>
                 <input type="hidden" name="SAMLResponse" value="${props.assertion}" />
                 <input type="hidden" name="RelayState" value="${props.relayState}" />
-                <input class="button" type="submit" value="Submit" />
+                <input className="button" type="submit" value="Submit" />
               </form>
           </div>
       </section>

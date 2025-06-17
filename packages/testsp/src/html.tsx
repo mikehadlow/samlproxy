@@ -21,17 +21,17 @@ const Layout = (props: SiteData) =>
 
 export const Home = (props: { siteData: SiteData, username: string }) => (
   <Layout {...props.siteData }>
-      <div class="container">
-          <section class="section">
-              <div class="block">
-                  <h1 class="title">SP Home</h1>
+      <div className="container">
+          <section className="section">
+              <div className="block">
+                  <h1 className="title">SP Home</h1>
                   <p>Welcome <strong>{props.username}</strong>!</p>
                   <p>
                       You are now authenticated with the service provider.
                   </p>
               </div>
-              <div class="block">
-                  <a class="button is-primary" href="/logout">Logout</a>
+              <div className="block">
+                  <a className="button is-primary" href="/logout">Logout</a>
               </div>
           </section>
       </div>
@@ -40,16 +40,16 @@ export const Home = (props: { siteData: SiteData, username: string }) => (
 
 export const Login = (props: { siteData: SiteData }) => (
   <Layout {...props.siteData }>
-      <div class="container">
-          <section class="section">
-              <h1 class="title">SP Login</h1>
+      <div className="container">
+          <section className="section">
+              <h1 className="title">SP Login</h1>
               <form action="/login" method="post">
-                  <div class="field">
-                      <label class="label" for="username">Email:</label>
-                      <input class="input" type="text" id="username" name="username" required></input>
+                  <div className="field">
+                      <label className="label" htmlFor="username">Email:</label>
+                      <input className="input" type="text" id="username" name="username" required></input>
                   </div>
-                  <div class="field">
-                      <input class="button is-primary" type="submit" value="Login"></input>
+                  <div className="field">
+                      <input className="button is-primary" type="submit" value="Login"></input>
                   </div>
               </form>
           </section>
@@ -63,14 +63,14 @@ export const Error = (props: {
   title: string,
   message: string }) => (
   <Layout {...props.siteData }>
-      <div class="container">
-          <section class="section">
-              <div class="block">
-                  <h1 class="title">{props.status} {props.title}</h1>
+      <div className="container">
+          <section className="section">
+              <div className="block">
+                  <h1 className="title">{props.status} {props.title}</h1>
                   <p>{props.message}</p>
               </div>
-              <div class="block">
-                  <a class="button is-primary" href="/">Home</a>
+              <div className="block">
+                  <a className="button is-primary" href="/">Home</a>
               </div>
           </section>
       </div>

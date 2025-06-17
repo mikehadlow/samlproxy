@@ -47,11 +47,11 @@ const errorResult = (c: Context, fail: r.Fail) => {
     ... errorProps,
   }
   c.status(props.status)
-  return c.html(html.Error(props))
+  return c.html(html.Error(props).toString())
 }
 
 app.get("/", async (c) => {
-  return c.html(html.Home({ siteData: siteData("IdP Home") }))
+  return c.html(html.Home({ siteData: siteData("Proxy") }).toString())
 })
 
 app.get("/sso", async (c) => {
@@ -163,7 +163,7 @@ app.notFound((c) => {
     message: "There's nothing to see here, move along please."
   } as const
   c.status(props.status)
-  return c.html(html.Error(props))
+  return c.html(html.Error(props).toString())
 })
 
 export default app

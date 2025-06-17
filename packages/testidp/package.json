@@ -7,7 +7,9 @@
     "dev": "bun run --hot src/index.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6"
   },
   "peerDependencies": {
     "typescript": "^5"

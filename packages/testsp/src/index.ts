@@ -74,7 +74,7 @@ const errorResult = (c: Context, fail: r.Fail) => {
     ... errorProps,
   }
   c.status(props.status)
-  return c.html(html.Error(props))
+  return c.html(html.Error(props).toString())
 }
 
 // Home is the only JWT protected route.
@@ -85,7 +85,7 @@ app.get("/", authMiddleware, async (c) => {
     },
     username: c.var.session.username,
   }
-  return c.html(html.Home(props))
+  return c.html(html.Home(props).toString())
 })
 
 app.get("/logout", (c) => {
@@ -99,7 +99,7 @@ app.get("/login", (c) => {
       title: "SP Login"
     }
   }
-  return c.html(html.Login(props))
+  return c.html(html.Login(props).toString())
 })
 
 app.post("/login", async (c) => {
@@ -184,7 +184,7 @@ app.notFound((c) => {
     message: "There's nothing to see here, move along please."
   } as const
   c.status(props.status)
-  return c.html(html.Error(props))
+  return c.html(html.Error(props).toString())
 })
 
 export default app
