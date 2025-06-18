@@ -70,7 +70,7 @@ export const getIdpConnection = (db: Database, args: { idpEntityId: string }): r
   const result = query.get(args)
   return (result)
     ? r.from(e.idpConnectionParser.parse(snakeToCamel(result)))
-    : r.fail("Invalid IdP entity ID. No connection found")
+    : r.fail(`Invalid IdP entity ID: ${ args.idpEntityId }. No connection found`)
 }
 
 export const insertSpConnection = (db: Database, connection: e.SpConnection): void => {

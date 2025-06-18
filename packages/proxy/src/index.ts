@@ -73,17 +73,15 @@ app.get("/sso", async (c) => {
   const idpConnectionResult = r.bind(linkResult,
     (link) => getIdpConnection(con, { idpEntityId: link.idpEntityId }))
 
-  const aunthnRequestResult = r.map(idpConnectionResult,
-    (connection) => {
-      // record the relaystate and email in the db
-      const relayState = `rs-${crypto.randomUUID()}`
-      r.run(linkResult, (link) => {
-        recordRelayState(con, {
-          relayState,
-          spEntityId: link.spEntityId,
-        })
+  const aunthnRequestResult = r.map(
+    r.merge2(idpConnectionResult, requestResult),
+    (ctx) => {
+      // record the relaystate and SP entityId in the db
+      recordRelayState(con, {
+        relayState: ctx.b.RelayState,
+        spEntityId: ctx.a.spEntityId,
       })
-      return saml.generateAuthnRequest({ connection, relayState })
+      return saml.generateAuthnRequest({ connection: ctx.a, relayState: ctx.b.RelayState })
     })
 
   if (r.isOk(aunthnRequestResult)) {
@@ -102,13 +100,9 @@ app.post("/acs", async (c) => {
     assertionExtractResult,
     (assertionExtract) => getIdpConnection(con, { idpEntityId: assertionExtract.issuer }))
 
-  const linkResult = r.bind(
-    idpConnectionResult,
-    (connection) => getLinkedSpEntityId(con,{ idpEntityId: connection.idpEntityId }))
-
   // validate the relayState
   const validateRelayStateResult = r.validate(
-    r.merge2(formResult, linkResult),
+    r.merge2(formResult, idpConnectionResult),
     (ctx) => {
       const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
       return r.bind(
@@ -126,6 +120,10 @@ app.post("/acs", async (c) => {
 
   // We've successfully validated the SAML Assertion, so now we can issue a new Assesrtion
   // for the downstream SP
+  const linkResult = r.bind(
+    idpConnectionResult,
+    (connection) => getLinkedSpEntityId(con,{ idpEntityId: connection.idpEntityId }))
+
   const spConnectionResult = r.bind(
     r.merge2(validateAssertionResult, linkResult),
     (ctx) => getSpConnection(con, { spEntityId: ctx.b.spEntityId }))
