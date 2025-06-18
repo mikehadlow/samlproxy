@@ -127,7 +127,7 @@ app.post("/login", async (c) => {
   return errorResult(c, aunthnRequestResult)
 })
 
-app.post("/acs", async (c) => {
+app.post("/sp/acs", async (c) => {
   const body = await c.req.parseBody()
   const formResult = r.attempt(() => assertionForm.parse(body))
   const assertionExtractResult = r.map(formResult, (form) => saml.parseAssertion(form.SAMLResponse))

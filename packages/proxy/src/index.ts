@@ -54,7 +54,7 @@ app.get("/", async (c) => {
   return c.html(html.Home({ siteData: siteData("Proxy") }).toString())
 })
 
-app.get("/sso", async (c) => {
+app.get("/proxy/sso", async (c) => {
   const requestResult = r.attempt(() => authnRequest.parse(c.req.query()))
 
   const parseResult = r.bind(requestResult,
@@ -91,7 +91,7 @@ app.get("/sso", async (c) => {
   return errorResult(c, aunthnRequestResult)
 })
 
-app.post("/acs", async (c) => {
+app.post("/proxy/acs", async (c) => {
   const body = await c.req.parseBody()
   const formResult = r.attempt(() => assertionForm.parse(body))
   const assertionExtractResult = r.map(formResult, (form) => saml.parseAssertion(form.SAMLResponse))

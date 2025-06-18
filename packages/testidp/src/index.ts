@@ -119,7 +119,7 @@ app.post("/login", async (c) => {
   return c.redirect(login.redirect_to)
 })
 
-app.get("/sso", authMiddleware, async (c) => {
+app.get("/idp/sso", authMiddleware, async (c) => {
   const requestResult = r.attempt(() => authnRequest.parse(c.req.query()))
 
   const parseResult = r.bind(requestResult,

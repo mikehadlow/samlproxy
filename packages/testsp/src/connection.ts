@@ -35,10 +35,10 @@ const loadCert = (args: { keysBasePath: string, certificateFile: string }): stri
 const directIdpConnection: saml.IdpConnection = {
   // SP (my) properties
   spEntityId: `${env.spUrlBase}/test-sp`,
-  spAcsUrl: `${env.spUrlBase}/acs`,
+  spAcsUrl: `${env.spUrlBase}/sp/acs`,
   // IdP (their) properties
   idpEntityId: `${env.idpUrlBase}/test-idp`,
-  idpSsoUrl: `${env.idpUrlBase}/sso`,
+  idpSsoUrl: `${env.idpUrlBase}/idp/sso`,
   // certificate must match the IdP's certificate
   signingCertificate: loadCert({
     keysBasePath: env.idpKeysBasePath,
@@ -49,10 +49,10 @@ const directIdpConnection: saml.IdpConnection = {
 const proxyConnection: saml.IdpConnection = {
   // SP (my) properties
   spEntityId: `${env.spUrlBase}/test-sp`,
-  spAcsUrl: `${env.spUrlBase}/acs`,
+  spAcsUrl: `${env.spUrlBase}/sp/acs`,
   // IdP (their) properties
   idpEntityId: `${env.proxyUrlBase}/proxy`,
-  idpSsoUrl: `${env.proxyUrlBase}/sso`,
+  idpSsoUrl: `${env.proxyUrlBase}/proxy/sso`,
   // certificate must match the IdP's certificate
   signingCertificate: loadCert({
     keysBasePath: env.proxyKeysBasePath,

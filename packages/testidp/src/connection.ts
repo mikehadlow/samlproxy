@@ -35,25 +35,25 @@ export const initializeConnections = (db: Database) => {
   const directSpConnection: saml.SpConnection = {
     // IdP (my) properties
     idpEntityId: `${ env.idpBaseUrl }/test-idp`,
-    idpSsoUrl: `${ env.idpBaseUrl }/sso`,
+    idpSsoUrl: `${ env.idpBaseUrl }/idp/sso`,
     privateKey: keys.encryptionKey,
     privateKeyPassword: keys.encryptionKeyPw,
     signingCertificate: keys.certificate,
     // SP (their) properties
     spEntityId: `${ env.spBaseUrl }/test-sp`,
-    spAcsUrl: `${ env.spBaseUrl }/acs`,
+    spAcsUrl: `${ env.spBaseUrl }/sp/acs`,
   }
 
   const proxyConnection: saml.SpConnection = {
     // IdP (my) properties
     idpEntityId: `${ env.idpBaseUrl }/test-idp`,
-    idpSsoUrl: `${ env.idpBaseUrl }/sso`,
+    idpSsoUrl: `${ env.idpBaseUrl }/idp/sso`,
     privateKey: keys.encryptionKey,
     privateKeyPassword: keys.encryptionKeyPw,
     signingCertificate: keys.certificate,
     // SP (their) properties
     spEntityId: `${ env.proxyBaseUrl }/proxy`,
-    spAcsUrl: `${ env.proxyBaseUrl }/acs`,
+    spAcsUrl: `${ env.proxyBaseUrl }/proxy/acs`,
   }
 
   insertSpConnection(db, directSpConnection)
