@@ -63,8 +63,7 @@ app.get("/sso", async (c) => {
   const spConnectionResult = r.bind(parseResult,
     (request) => getSpConnection(con, { spEntityId: request.issuer }))
 
-  const ctx1 = r.merge2(parseResult, spConnectionResult)
-  const validationResult = r.validate(ctx1,
+  const validationResult = r.validate(r.merge2(parseResult, spConnectionResult),
     (ctx) => saml.validateAuthnRequest({ connection: ctx.b, details: ctx.a }))
 
   // Now that we've validated the AuthnRequest from the SP, we create a new
@@ -103,35 +102,36 @@ app.post("/acs", async (c) => {
     assertionExtractResult,
     (assertionExtract) => getIdpConnection(con, { idpEntityId: assertionExtract.issuer }))
 
-  const linkResult = r.bind(idpConnectionResult,
+  const linkResult = r.bind(
+    idpConnectionResult,
     (connection) => getLinkedSpEntityId(con,{ idpEntityId: connection.idpEntityId }))
 
   // validate the relayState
-  let ctx1 = r.merge2(formResult, linkResult)
-  ctx1 = r.validate(ctx1, (ctx) => {
-    const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
-    return r.bind(
-      relayStateResult,
-      (relayState) => relayState.sp_entity_id === ctx.b.spEntityId
-        ? r.voidResult
-        : r.fail(`SP Error invalid spEntityId: expected: ${relayState.sp_entity_id}, got: ${ctx.b.spEntityId}`)
-    )
-  })
+  const validateRelayStateResult = r.validate(
+    r.merge2(formResult, linkResult),
+    (ctx) => {
+      const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
+      return r.bind(
+        relayStateResult,
+        (relayState) => relayState.sp_entity_id === ctx.b.spEntityId
+          ? r.voidResult
+          : r.fail(`SP Error invalid spEntityId: expected: ${relayState.sp_entity_id}, got: ${ctx.b.spEntityId}`)
+      )
+    })
 
   // validate the assertion certificate etc
-  let ctx2 = r.merge3(ctx1, formResult, idpConnectionResult)
-  ctx2 = await r.validateAsync(
-    ctx2,
+  const validateAssertionResult = await r.validateAsync(
+    r.merge3(validateRelayStateResult, formResult, idpConnectionResult),
     (ctx) => saml.validateAssertion({ connection: ctx.c, encodedAssertion: ctx.b.SAMLResponse }))
 
   // We've successfully validated the SAML Assertion, so now we can issue a new Assesrtion
   // for the downstream SP
-  const ctx3 = r.merge2(ctx2, linkResult)
-  const spConnectionResult = r.bind(ctx3,
+  const spConnectionResult = r.bind(
+    r.merge2(validateAssertionResult, linkResult),
     (ctx) => getSpConnection(con, { spEntityId: ctx.b.spEntityId }))
 
-  const ctx4 = r.merge3(ctx3, formResult, assertionExtractResult)
-  const assertionProps = r.map(ctx4,
+  const assertionProps = r.map(
+    r.merge3(spConnectionResult, formResult, assertionExtractResult),
     (ctx) => ({
     user: {
       email: ctx.c.nameID,
@@ -140,8 +140,8 @@ app.post("/acs", async (c) => {
     requestId: ctx.c.id,
   }))
 
-  const ctx5 = r.merge2(spConnectionResult, assertionProps)
-  const result = await r.mapAsync(ctx5,
+  const result = await r.mapAsync(
+    r.merge2(spConnectionResult, assertionProps),
     (ctx) =>   saml.generateAssertion({ connection: ctx.a, ...ctx.b }))
 
   if (r.isOk(result)) {

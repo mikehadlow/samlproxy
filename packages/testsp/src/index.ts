@@ -117,11 +117,11 @@ app.post("/login", async (c) => {
         email: user.email,
       })
     })
-    // finally redirect to the IdP
     return saml.generateAuthnRequest({ connection, relayState })
   })
 
   if (r.isOk(aunthnRequestResult)) {
+    // finally redirect to the IdP
     return c.redirect(aunthnRequestResult.value.url)
   }
   return errorResult(c, aunthnRequestResult)
@@ -136,41 +136,43 @@ app.post("/acs", async (c) => {
     assertionExtractResult,
     (assertionExtract) => getIdpConnection(con, { idpEntityId: assertionExtract.issuer }))
 
-  let contextResult = r.merge3(formResult, assertionExtractResult, connectionResult)
-
   // validate the relayState
-  contextResult = r.validate(contextResult, (ctx) => {
-    const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
-    return r.bind(
-      relayStateResult,
-      (relayState) => relayState.email === ctx.b.nameID
-        ? r.voidResult
-        : r.fail(`SP Error invalid email: expected: ${relayState.email}, got: ${ctx.b.nameID}`)
-    )
-  })
+  const relayStateValidationResult = r.validate(
+    r.merge3(formResult, assertionExtractResult, connectionResult),
+    (ctx) => {
+      const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
+      return r.bind(
+        relayStateResult,
+        (relayState) => relayState.email === ctx.b.nameID
+          ? r.voidResult
+          : r.fail(`SP Error invalid email: expected: ${relayState.email}, got: ${ctx.b.nameID}`)
+      )
+    })
 
   // validate the assertion certificate etc
-  contextResult = await r.validateAsync(
-    contextResult,
+  const assertionValidationResult = await r.validateAsync(
+    relayStateValidationResult,
     (ctx) => saml.validateAssertion({ connection: ctx.c, encodedAssertion: ctx.a.SAMLResponse }))
 
   // We've successfully validated the SAML Assertion, so now we can issue a JWT for our application
-  r.run(contextResult, (ctx) => {
-    const session: Session = { username: ctx.b.nameID }
-    const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
-    setCookie(c, authCookieName, token, {
-      httpOnly: true,
-      maxAge: 60 * 60 * 1000, // 1h
-      sameSite: "Lax",
+  r.run(
+    assertionValidationResult,
+    (ctx) => {
+      const session: Session = { username: ctx.b.nameID }
+      const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
+      setCookie(c, authCookieName, token, {
+        httpOnly: true,
+        maxAge: 60 * 60 * 1000, // 1h
+        sameSite: "Lax",
+      })
     })
-  })
 
-  if (r.isOk(contextResult)) {
+  if (r.isOk(assertionValidationResult)) {
     return c.redirect("/")
   }
   else {
-    console.log(`SP Error validating assertion: ${contextResult.message}`)
-    return errorResult(c, contextResult)
+    console.log(`SP Error validating assertion: ${assertionValidationResult.message}`)
+    return errorResult(c, assertionValidationResult)
   }
 })
 

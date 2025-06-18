@@ -130,12 +130,12 @@ app.get("/sso", authMiddleware, async (c) => {
   const connectionResult = r.bind(parseResult,
     (request) => getSpConnection(con, { spEntityId: request.issuer }))
 
-  const ctx1 = r.merge2(parseResult, connectionResult)
-  const validationResult = r.validate(ctx1,
+  const validationResult = r.validate(
+    r.merge2(parseResult, connectionResult),
     (ctx) => saml.validateAuthnRequest({ connection: ctx.b, details: ctx.a }))
 
-  const ctx2 = r.merge3(requestResult, parseResult, validationResult)
-  const assertionProps = r.map(ctx2,
+  const assertionProps = r.map(
+    r.merge3(requestResult, parseResult, validationResult),
     (ctx) => ({
     user: {
       email: c.var.session.username
@@ -144,8 +144,8 @@ app.get("/sso", authMiddleware, async (c) => {
     requestId: ctx.b.id,
   }))
 
-  const ctx3 = r.merge2(connectionResult, assertionProps)
-  const result = await r.mapAsync(ctx3,
+  const result = await r.mapAsync(
+    r.merge2(connectionResult, assertionProps),
     (ctx) =>   saml.generateAssertion({ connection: ctx.a, ...ctx.b }))
 
   if (r.isOk(result)) {
