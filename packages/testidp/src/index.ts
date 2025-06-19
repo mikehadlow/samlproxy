@@ -27,7 +27,7 @@ type Session = z.infer<typeof session>
 
 const authCookieName = "idp_auth"
 const redirectQueryParam = "redirect_to"
-const siteData = (title: string): html.SiteData => ({ title })
+const siteData = (title: string, nonce: string): html.SiteData => ({ title, nonce })
 
 const env = z.object({
   jwtSecret: z.string().min(32),
@@ -36,8 +36,25 @@ const env = z.object({
 })
 
 const con = initDb()
-const app = new Hono()
+const app = new Hono<{ Variables: { nonce: string } }>()
 app.use(logger())
+
+const cspMiddleware = createMiddleware <{ Variables: { nonce: string } }>(async (c, next) => {
+  const nonce = crypto.randomUUID()
+  c.set("nonce", nonce)
+  const csp: [string, string][] = [
+    ["default-src", "'self'"],
+    ["style-src", `'nonce-${nonce}' cdn.jsdelivr.net`],
+    ["script-src", `'nonce-${nonce}'`],
+    ["object-src", "'none'"],
+    ["base-uri", "'none'"],
+    ["frame-ancestors", "'none'"],
+  ]
+  const cspString: string = csp.map(([key, value]) => `${key} ${value}`).join("; ")
+  await next()
+  c.header("Content-Security-Policy", cspString)
+})
+app.use(cspMiddleware)
 
 const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (async (c, next) => {
   // if the AuthnRequest hits the /sso path, but the user hasn't already logged in
@@ -79,6 +96,7 @@ const errorResult = (c: Context, fail: r.Fail) => {
   const props = {
     siteData: {
       title: "SP Error",
+      nonce: c.var["nonce"],
     },
     ... errorProps,
   }
@@ -88,7 +106,7 @@ const errorResult = (c: Context, fail: r.Fail) => {
 
 
 app.get("/", authMiddleware, async (c) => {
-  return c.html(html.Home({ siteData: siteData("IdP Home"), ...c.var.session }).toString())
+  return c.html(html.Home({ siteData: siteData("IdP Home", c.var["nonce"]), ...c.var.session }).toString())
 })
 
 app.get("/logout", (c) => {
@@ -98,7 +116,7 @@ app.get("/logout", (c) => {
 
 app.get("/login", (c) => {
   const redirectTo = c.req.query(redirectQueryParam) ?? "/"
-  return c.html(html.Login({ siteData: siteData("IdP Login"), redirectTo }).toString())
+  return c.html(html.Login({ siteData: siteData("IdP Login", c.var["nonce"]), redirectTo }).toString())
 })
 
 app.post("/login", async (c) => {
@@ -149,12 +167,20 @@ app.get("/idp/sso", authMiddleware, async (c) => {
     (ctx) =>   saml.generateAssertion({ connection: ctx.a, ...ctx.b }))
 
   if (r.isOk(result)) {
-    return c.html(html.Assertion(result.value))
+    return c.html(html.Assertion({ ...result.value, nonce: c.var.nonce }))
   }
   else {
     console.log(`IdP Error validating authnRequest: ${result.message}`)
     return errorResult(c, result)
   }
+})
+
+app.get("/auto-form-submission.js", (c) => {
+  c.header("Content-Type", "text/javascript")
+  return c.text(`
+    const myForm = document.getElementById("assertion-form");
+    myForm.submit();
+    `)
 })
 
 export default app
