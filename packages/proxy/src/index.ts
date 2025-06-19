@@ -1,4 +1,6 @@
 import { Hono, type Context } from "hono"
+import { logger } from 'hono/logger'
+import { createMiddleware } from 'hono/factory'
 import * as r from "common/result"
 import * as saml from "common/saml"
 import { getSpConnection, getIdpConnection } from "common/db"
@@ -24,9 +26,26 @@ const assertionForm = z.object({
 
 const con = initDb()
 
-const siteData = (title: string): html.SiteData => ({ title })
+const siteData = (title: string, nonce: string): html.SiteData => ({ title, nonce })
 
-const app = new Hono()
+const app = new Hono<{ Variables: { nonce: string } }>()
+app.use(logger())
+const cspMiddleware = createMiddleware <{ Variables: { nonce: string } }>(async (c, next) => {
+  const nonce = crypto.randomUUID()
+  c.set("nonce", nonce)
+  const csp: [string, string][] = [
+    ["default-src", "'self'"],
+    ["style-src", `'nonce-${nonce}' cdn.jsdelivr.net`],
+    ["script-src", `'nonce-${nonce}'`],
+    ["object-src", "'none'"],
+    ["base-uri", "'none'"],
+    ["frame-ancestors", "'none'"],
+  ]
+  const cspString: string = csp.map(([key, value]) => `${key} ${value}`).join("; ")
+  await next()
+  c.header("Content-Security-Policy", cspString)
+})
+app.use(cspMiddleware)
 
 const errorResult = (c: Context, fail: r.Fail) => {
   const errorProps = (typeof fail.message === "string")
@@ -43,6 +62,7 @@ const errorResult = (c: Context, fail: r.Fail) => {
   const props = {
     siteData: {
       title: "SP Error",
+      nonce: c.var["nonce"]
     },
     ... errorProps,
   }
@@ -51,7 +71,7 @@ const errorResult = (c: Context, fail: r.Fail) => {
 }
 
 app.get("/", async (c) => {
-  return c.html(html.Home({ siteData: siteData("Proxy") }).toString())
+  return c.html(html.Home({ siteData: siteData("Proxy", c.var["nonce"] ) }).toString())
 })
 
 app.get("/proxy/sso", async (c) => {
@@ -143,7 +163,7 @@ app.post("/proxy/acs", async (c) => {
     (ctx) =>   saml.generateAssertion({ connection: ctx.a, ...ctx.b }))
 
   if (r.isOk(result)) {
-    return c.html(html.Assertion(result.value))
+    return c.html(html.Assertion({ ...result.value, nonce: c.var["nonce"] }))
   }
   else {
     console.log(`IdP Error validating authnRequest: ${result.message}`)
@@ -154,7 +174,8 @@ app.post("/proxy/acs", async (c) => {
 app.notFound((c) => {
   const props = {
     siteData: {
-      title: "Not Found"
+      title: "Not Found",
+      nonce: c.var["nonce"],
     },
     status: 404,
     title: "Not Found",
@@ -162,6 +183,14 @@ app.notFound((c) => {
   } as const
   c.status(props.status)
   return c.html(html.Error(props).toString())
+})
+
+app.get("/auto-form-submission.js", (c) => {
+  c.header("Content-Type", "text/javascript")
+  return c.text(`
+    const myForm = document.getElementById("assertion-form");
+    myForm.submit();
+    `)
 })
 
 export default app
