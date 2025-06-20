@@ -3,6 +3,7 @@ import { logger } from 'hono/logger'
 import * as saml from "common/saml"
 import { z } from "zod/v4"
 import * as r from "common/result"
+import { cspMiddleware, type ContextWithNonce } from "common/hono-middleware"
 import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
@@ -36,8 +37,10 @@ const authCookieName = "sp_auth"
 const con = createDb([ spPrivateTables, createIdpConnectionTable ])
 initializeDb(con)
 
-const app = new Hono()
+const app = new Hono<ContextWithNonce>()
 app.use(logger())
+app.use(cspMiddleware())
+
 const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (async (c, next) => {
   const token = getCookie(c, authCookieName)
   if (!token) {
@@ -70,6 +73,7 @@ const errorResult = (c: Context, fail: r.Fail) => {
   const props = {
     siteData: {
       title: "SP Error",
+      nonce: c.var["nonce"],
     },
     ... errorProps,
   }
@@ -82,6 +86,7 @@ app.get("/", authMiddleware, async (c) => {
   const props = {
     siteData: {
       title: "SP Home",
+      nonce: c.var["nonce"],
     },
     username: c.var.session.username,
   }
@@ -96,7 +101,8 @@ app.get("/logout", (c) => {
 app.get("/login", (c) => {
   const props = {
     siteData: {
-      title: "SP Login"
+      title: "SP Login",
+      nonce: c.var["nonce"],
     }
   }
   return c.html(html.Login(props).toString())
@@ -179,7 +185,8 @@ app.post("/sp/acs", async (c) => {
 app.notFound((c) => {
   const props = {
     siteData: {
-      title: "Not Found"
+      title: "Not Found",
+      nonce: c.var["nonce"],
     },
     status: 404,
     title: "Not Found",

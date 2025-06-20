@@ -1,6 +1,7 @@
 import { getSpConnection } from "common/db"
 import * as r from "common/result"
 import * as saml from "common/saml"
+import { cspMiddleware, type ContextWithNonce } from "common/hono-middleware"
 import { Hono, type Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
@@ -36,25 +37,10 @@ const env = z.object({
 })
 
 const con = initDb()
-const app = new Hono<{ Variables: { nonce: string } }>()
+// const app = new Hono<{ Variables: { nonce: string } }>()
+const app = new Hono<ContextWithNonce>()
 app.use(logger())
-
-const cspMiddleware = createMiddleware <{ Variables: { nonce: string } }>(async (c, next) => {
-  const nonce = crypto.randomUUID()
-  c.set("nonce", nonce)
-  const csp: [string, string][] = [
-    ["default-src", "'self'"],
-    ["style-src", `'nonce-${nonce}' cdn.jsdelivr.net`],
-    ["script-src", `'nonce-${nonce}'`],
-    ["object-src", "'none'"],
-    ["base-uri", "'none'"],
-    ["frame-ancestors", "'none'"],
-  ]
-  const cspString: string = csp.map(([key, value]) => `${key} ${value}`).join("; ")
-  await next()
-  c.header("Content-Security-Policy", cspString)
-})
-app.use(cspMiddleware)
+app.use(cspMiddleware())
 
 const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (async (c, next) => {
   // if the AuthnRequest hits the /sso path, but the user hasn't already logged in

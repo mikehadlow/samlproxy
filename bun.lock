@@ -9,6 +9,7 @@
       "dependencies": {
         "@types/mustache": "^4.2.6",
         "fast-xml-parser": "^5.2.3",
+        "hono": "4.8.1",
         "mustache": "^4.2.0",
         "samlify": "^2.10.0",
       },
@@ -23,7 +24,7 @@
       "name": "proxy",
       "dependencies": {
         "common": "workspace:*",
-        "hono": "^4.7.9",
+        "hono": "4.8.1",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -39,7 +40,7 @@
       "dependencies": {
         "@types/mustache": "^4.2.6",
         "common": "workspace:*",
-        "hono": "^4.7.9",
+        "hono": "4.8.1",
         "mustache": "^4.2.0",
       },
       "devDependencies": {
@@ -56,7 +57,7 @@
       "dependencies": {
         "@types/jsonwebtoken": "^9.0.9",
         "common": "workspace:*",
-        "hono": "^4.7.9",
+        "hono": "4.8.1",
         "jsonwebtoken": "^9.0.2",
         "zod": "^3.25.20",
       },
@@ -109,7 +110,7 @@
 
     "fast-xml-parser": ["fast-xml-parser@5.2.3", "", { "dependencies": { "strnum": "^2.1.0" }, "bin": { "fxparser": "src/cli/cli.js" } }, "sha512-OdCYfRqfpuLUFonTNjvd30rCBZUneHpSQkCqfaeWQ9qrKcl6XlWeDBNVwGb+INAIxRshuN2jF+BE0L6gbBO2mw=="],
 
-    "hono": ["hono@4.7.9", "", {}, "sha512-/EsCoR5h7N4yu01TDu9GMCCJa6ZLk5ZJIWFFGNawAXmd1Tp53+Wir4xm0D2X19bbykWUlzQG0+BvPAji6p9E8Q=="],
+    "hono": ["hono@4.8.1", "", {}, "sha512-ErA2ifywnSmcnB5XDuFqGDfXJ9xuAJR2C/8cZAk6vDaOCzofB8eNlha/wZWIiamREzWk94S9Z7wHsnKQHn7Niw=="],
 
     "jsonwebtoken": ["jsonwebtoken@9.0.2", "", { "dependencies": { "jws": "^3.2.2", "lodash.includes": "^4.3.0", "lodash.isboolean": "^3.0.3", "lodash.isinteger": "^4.0.4", "lodash.isnumber": "^3.0.3", "lodash.isplainobject": "^4.0.6", "lodash.isstring": "^4.0.1", "lodash.once": "^4.0.0", "ms": "^2.1.1", "semver": "^7.5.4" } }, "sha512-PRp66vJ865SSqOlgqS8hujT5U4AOgMfhrwYIuIhfKaoSCZcirrmASQr8CX7cUg+RMih+hgznrjp99o+W4pJLHQ=="],
 

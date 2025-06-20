@@ -5,7 +5,8 @@
     "./result": "./src/result.ts",
     "./saml": "./src/saml.ts",
     "./db": "./src/db.ts",
-    "./keys": "./src/keys.ts"
+    "./keys": "./src/keys.ts",
+    "./hono-middleware": "./src/hono-middleware.ts"
   },
   "module": "src/index.ts",
   "type": "module",
@@ -19,6 +20,7 @@
   "dependencies": {
     "@types/mustache": "^4.2.6",
     "fast-xml-parser": "^5.2.3",
+    "hono": "4.8.1",
     "mustache": "^4.2.0",
     "samlify": "^2.10.0"
   }

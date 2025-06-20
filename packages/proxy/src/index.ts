@@ -1,6 +1,6 @@
 import { Hono, type Context } from "hono"
 import { logger } from 'hono/logger'
-import { createMiddleware } from 'hono/factory'
+import { cspMiddleware, type ContextWithNonce } from "common/hono-middleware"
 import * as r from "common/result"
 import * as saml from "common/saml"
 import { getSpConnection, getIdpConnection } from "common/db"
@@ -28,24 +28,9 @@ const con = initDb()
 
 const siteData = (title: string, nonce: string): html.SiteData => ({ title, nonce })
 
-const app = new Hono<{ Variables: { nonce: string } }>()
+const app = new Hono<ContextWithNonce>()
 app.use(logger())
-const cspMiddleware = createMiddleware <{ Variables: { nonce: string } }>(async (c, next) => {
-  const nonce = crypto.randomUUID()
-  c.set("nonce", nonce)
-  const csp: [string, string][] = [
-    ["default-src", "'self'"],
-    ["style-src", `'nonce-${nonce}' cdn.jsdelivr.net`],
-    ["script-src", `'nonce-${nonce}'`],
-    ["object-src", "'none'"],
-    ["base-uri", "'none'"],
-    ["frame-ancestors", "'none'"],
-  ]
-  const cspString: string = csp.map(([key, value]) => `${key} ${value}`).join("; ")
-  await next()
-  c.header("Content-Security-Policy", cspString)
-})
-app.use(cspMiddleware)
+app.use(cspMiddleware())
 
 const errorResult = (c: Context, fail: r.Fail) => {
   const errorProps = (typeof fail.message === "string")
