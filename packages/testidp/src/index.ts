@@ -1,7 +1,7 @@
 import { getSpConnection } from "common/db"
 import * as r from "common/result"
 import * as saml from "common/saml"
-import { cspMiddleware, type ContextWithNonce } from "common/hono-middleware"
+import { cspMiddleware, type ContextWithNonce } from "common/hono"
 import { Hono, type Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'

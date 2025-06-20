@@ -1,6 +1,6 @@
 import { Hono, type Context } from "hono"
 import { logger } from 'hono/logger'
-import { cspMiddleware, type ContextWithNonce } from "common/hono-middleware"
+import { cspMiddleware, type ContextWithNonce } from "common/hono"
 import * as r from "common/result"
 import * as saml from "common/saml"
 import { getSpConnection, getIdpConnection } from "common/db"

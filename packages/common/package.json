@@ -6,7 +6,7 @@
     "./saml": "./src/saml.ts",
     "./db": "./src/db.ts",
     "./keys": "./src/keys.ts",
-    "./hono-middleware": "./src/hono-middleware.ts"
+    "./hono": "./src/hono.ts"
   },
   "module": "src/index.ts",
   "type": "module",

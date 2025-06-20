@@ -3,7 +3,7 @@ import { logger } from 'hono/logger'
 import * as saml from "common/saml"
 import { z } from "zod/v4"
 import * as r from "common/result"
-import { cspMiddleware, type ContextWithNonce } from "common/hono-middleware"
+import { cspMiddleware, type ContextWithNonce } from "common/hono"
 import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
