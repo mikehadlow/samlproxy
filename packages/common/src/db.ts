@@ -155,3 +155,44 @@ export const getSpConnection = (db: Database, args: { spEntityId: string }): r.R
     ? r.from(e.spConnectionParser.parse(snakeToCamel(result)))
     : r.fail("Invalid SP entity ID. No connection found")
 }
+
+export const getSpConnectionById = (db: Database, args: { id: string }): r.Result<e.SpConnection> => {
+  using query = db.query(`
+    SELECT
+      id,
+      name,
+      idp_entity_id,
+      idp_sso_url,
+      private_key,
+      private_key_password,
+      signing_certificate,
+      sp_entity_id,
+      sp_acs_url
+    FROM sp_connection
+    WHERE id = $id
+    `)
+  const result = query.get(args)
+  return (result)
+    ? r.from(e.spConnectionParser.parse(snakeToCamel(result)))
+    : r.fail("Invalid SP entity ID. No connection found")
+}
+
+export const getAllSpConnections = (db: Database): e.SpConnection[] => {
+  using query = db.query(`
+    SELECT
+      id,
+      name,
+      idp_entity_id,
+      idp_sso_url,
+      private_key,
+      private_key_password,
+      signing_certificate,
+      sp_entity_id,
+      sp_acs_url
+    FROM sp_connection
+    `)
+  const results = query.all()
+  return results
+    .filter((row) => row !== null && typeof row === "object")
+    .map((row) => e.spConnectionParser.parse(snakeToCamel(row)))
+}

@@ -62,6 +62,15 @@ describe("db", () => {
     expect(r.isOk(result)).toBeTrue()
     if(r.isFail(result)) throw new Error("type coertion")
     expect(result.value).toEqual(connection)
+
+    const result2 = db.getSpConnectionById(con, connection)
+    expect(r.isOk(result2)).toBeTrue()
+    if(r.isFail(result2)) throw new Error("type coertion")
+    expect(result2.value).toEqual(connection)
+
+    const result3 = db.getAllSpConnections(con)
+    expect(result3.length).toBe(1)
+    expect(result3[0]).toEqual(connection)
   })
 
   test("insert and select idp_connection should work", () => {
@@ -76,7 +85,9 @@ describe("db", () => {
       idpSsoUrl: "https://example-idp.com/sso",
     }
     const con = db.createDb([db.createIdpConnectionTable])
+
     db.insertIdpConnection(con, connection)
+
     const result = db.getIdpConnection(con, connection)
     expect(r.isOk(result)).toBeTrue()
     if(r.isFail(result)) throw new Error("type coertion")

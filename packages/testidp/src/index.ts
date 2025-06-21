@@ -1,4 +1,4 @@
-import { getSpConnection } from "common/db"
+import { getAllSpConnections, getSpConnection } from "common/db"
 import * as r from "common/result"
 import * as saml from "common/saml"
 import { cspMiddleware, type ContextWithNonce } from "common/hono"
@@ -92,7 +92,12 @@ const errorResult = (c: Context, fail: r.Fail) => {
 
 
 app.get("/", authMiddleware, async (c) => {
-  return c.html(html.Home({ siteData: siteData("IdP Home", c.var["nonce"]), ...c.var.session }).toString())
+  const connections = getAllSpConnections(con)
+  return c.html(html.Home({
+    siteData: siteData("IdP Home", c.var["nonce"]),
+    ...c.var.session,
+    connections,
+  }).toString())
 })
 
 app.get("/logout", (c) => {

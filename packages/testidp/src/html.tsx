@@ -1,4 +1,5 @@
 import { html } from 'hono/html'
+import type { SpConnection } from 'common/saml'
 
 export type SiteData = {
   title: string,
@@ -8,7 +9,7 @@ export type SiteData = {
 
 const Layout = (props: SiteData) =>
   html`<!DOCTYPE html>
-    <html>
+    <html class="theme-dark">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,36 +21,52 @@ const Layout = (props: SiteData) =>
     </body>
     </html>`
 
-export const Home = (props: { siteData: SiteData, username: string }) => (
-  <Layout {...props.siteData }>
-      <div className="container">
-          <section className="section">
-              <div className="block">
-                  <h1 className="title">IdP Home</h1>
-                  <p>Welcome <strong>{props.username}</strong>!</p>
-                  <p>
-                      You are now authenticated with the identity provider.
-                  </p>
-              </div>
-              <div className="block">
-                  <a className="button is-primary" href="/logout">Logout</a>
-              </div>
-          </section>
-      </div>
-  </Layout>
-)
+export const Home = (props: {
+  siteData: SiteData,
+  username: string,
+  connections: SpConnection[],
+}) => {
+  const connectionList = props.connections.map(connection => (
+    <li className="cell box has-background-info-dark" key={connection.id}>{connection.name}</li>
+  ))
+  return (
+    <Layout {...props.siteData }>
+        <div className="container">
+            <section className="section column is-8">
+                <div className="block">
+                    <h1 className="title">IdP Home</h1>
+                    <p>Welcome <strong>{props.username}</strong>!</p>
+                    <p>
+                        You are now authenticated with the identity provider.
+                    </p>
+                </div>
+                <div className="box">
+                    <h2 className="subtitle">Connections</h2>
+                    <p className="block">Click on a connection to login with IdP initiated SSO.</p>
+                    <ul className="grid">
+                        {connectionList}
+                    </ul>
+                </div>
+                <div className="block">
+                    <a className="button is-primary" href="/logout">Logout</a>
+                </div>
+            </section>
+        </div>
+    </Layout>
+  )
+}
 
 export const Login = (props: { siteData: SiteData, redirectTo: string }) => (
   <Layout {...props.siteData }>
       <div className="container">
-          <section className="section">
+          <section className="section column is-half">
               <h1 className="title">IdP Login</h1>
-              <p>
+              <p className="block">
                   This is the Identity provider login page. In a real system the credentials entered below
                   would be validated, but this test IdP allows you to enter any email for the username.
                   It performs no validation or checks of any kind.
               </p>
-              <form action="/login" method="post">
+              <form className="box" action="/login" method="post">
                   <div className="field">
                       <label className="label" htmlFor="username">Email:</label>
                       <input className="input" type="text" id="username" name="username" required></input>

@@ -42,9 +42,9 @@ export const Home = (props: { siteData: SiteData, username: string }) => (
 export const Login = (props: { siteData: SiteData }) => (
   <Layout {...props.siteData }>
       <div className="container">
-          <section className="section">
+          <section className="section column is-6">
               <h1 className="title">SP Login</h1>
-              <form action="/login" method="post">
+              <form className="box" action="/login" method="post">
                   <div className="field">
                       <label className="label" htmlFor="username">Email:</label>
                       <input className="input" type="text" id="username" name="username" required></input>
