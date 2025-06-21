@@ -33,6 +33,8 @@ export const initializeConnections = (db: Database) => {
   const keys = keysResult.value
 
   const directSpConnection: saml.SpConnection = {
+    id: crypto.randomUUID(),
+    name: "Direct To SP",
     // IdP (my) properties
     idpEntityId: `${ env.idpBaseUrl }/test-idp`,
     idpSsoUrl: `${ env.idpBaseUrl }/idp/sso`,
@@ -45,6 +47,8 @@ export const initializeConnections = (db: Database) => {
   }
 
   const proxyConnection: saml.SpConnection = {
+    id: crypto.randomUUID(),
+    name: "Via Proxy",
     // IdP (my) properties
     idpEntityId: `${ env.idpBaseUrl }/test-idp`,
     idpSsoUrl: `${ env.idpBaseUrl }/idp/sso`,

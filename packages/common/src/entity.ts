@@ -4,9 +4,12 @@ import * as z from "zod"
 // for creating the intial SP-initiated AuthnRequest, and also for consuming
 // the Assertion returned by the IdP at the Assertion Consumer Service endpoint.
 export const idpConnectionParser = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(3),
   // SP (my) properties
   spEntityId: z.string().min(3),
   spAcsUrl: z.string().url(),
+  spAllowIdpInitiated: z.boolean().default(false),
   // IdP (their) properties
   idpEntityId: z.string().min(3),
   idpSsoUrl: z.string().url(),
@@ -18,6 +21,8 @@ export type IdpConnection = z.infer<typeof idpConnectionParser>
 // for consuming an SP-initiated AuthnRequest, authenticating the principle, and
 // constructing and signing the assertion.
 export const spConnectionParser = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(3),
   // IdP (my) properties
   idpEntityId: z.string().min(3),
   idpSsoUrl: z.string().url(),

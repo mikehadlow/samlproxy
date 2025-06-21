@@ -12,8 +12,11 @@ describe("saml", () => {
   test("generateAuthnRequest should work", () => {
     // arrange
     const connection: e.IdpConnection = {
+      id: crypto.randomUUID(),
+      name: "My Connection",
       spEntityId: "the-sp-entity-id",
       spAcsUrl: "https://www.example-sp.com/acs",
+      spAllowIdpInitiated: true,
       idpEntityId: "the-idp-entity-id",
       idpSsoUrl: "https://www.example-idp.com/sso",
       signingCertificate: "not relevant for generating authnRequest",
@@ -140,6 +143,8 @@ describe("saml", () => {
   test("generateAssertion should work", async () => {
     // arrange
     const connection: e.SpConnection = {
+      id: crypto.randomUUID(),
+      name: "My SP",
       spEntityId: "the-sp-entity-id",
       spAcsUrl: "https://www.example-sp.com/acs",
       idpEntityId: "the-idp-entity-id",
@@ -180,6 +185,8 @@ describe("saml", () => {
 
   test("validateAssertion should work", async () => {
     const connectionCommon = {
+      id: crypto.randomUUID(),
+      name: "My Connection",
       spEntityId: "the-sp-entity-id",
       spAcsUrl: "https://www.example-sp.com/acs",
       idpEntityId: "the-idp-entity-id",
@@ -199,6 +206,7 @@ describe("saml", () => {
     const assertionResult = await saml.generateAssertion({ connection: spConnection, requestId, relayState, user })
     const idpConnection: e.IdpConnection = {
       ...connectionCommon,
+      spAllowIdpInitiated: true,
     }
 
     // act
@@ -212,6 +220,8 @@ describe("saml", () => {
   test("parseAssertion should parse assertion", () => {
     // arrange
     const connection: e.SpConnection = {
+      id: crypto.randomUUID(),
+      name: "My SP",
       idpEntityId: "the-idp-entity-id",
       idpSsoUrl: "https://www.idp.com/sso",
       privateKey: "the-long-private-key-string",

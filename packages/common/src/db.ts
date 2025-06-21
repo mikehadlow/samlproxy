@@ -15,6 +15,30 @@ export const snakeToCamel = (snake: Record<string, any>): Record<string, any> =>
   }, {})
 }
 
+export const intsToBools = (row: Record<string, any>, booleanColumns: string[]): Record<string, any> => {
+  return Object.keys(row).reduce((acc: Record<string, boolean>, current: string) => {
+    if(booleanColumns.includes(current)) {
+      acc[current] = row[current] === 1
+    }
+    else {
+      acc[current] = row[current]
+    }
+    return acc
+  }, {})
+}
+
+export const boolsToInts = (row: Record<string, any>): Record<string, any> => {
+  return Object.keys(row).reduce((acc: Record<string, any>, current: string) => {
+    if(typeof row[current] === "boolean") {
+      acc[current] = row[current] ? 1 : 0
+    }
+    else {
+      acc[current] = row[current]
+    }
+    return acc
+  }, {})
+}
+
 export const createDb = (creationScripts: ((db:Database) => void)[]) => {
   const db = new Database(":memory:", {
     strict: true,
@@ -40,27 +64,36 @@ export const insertIdpConnection = (db: Database, connection: e.IdpConnection): 
   e.idpConnectionParser.parse(connection)
   using query = db.query(`
     INSERT INTO idp_connection (
+      id,
+      name,
       sp_entity_id,
       sp_acs_url,
+      sp_allow_idp_initiated,
       idp_entity_id,
       idp_sso_url,
       signing_certificate
     )
     VALUES (
+      $id,
+      $name,
       $spEntityId,
       $spAcsUrl,
+      $spAllowIdpInitiated,
       $idpEntityId,
       $idpSsoUrl,
       $signingCertificate
     );`)
-  query.run(connection)
+  query.run(boolsToInts(connection))
 }
 
 export const getIdpConnection = (db: Database, args: { idpEntityId: string }): r.Result<e.IdpConnection> => {
   using query = db.query(`
     SELECT
+      id,
+      name,
       sp_entity_id,
       sp_acs_url,
+      sp_allow_idp_initiated,
       idp_entity_id,
       idp_sso_url,
       signing_certificate
@@ -69,7 +102,7 @@ export const getIdpConnection = (db: Database, args: { idpEntityId: string }): r
     `)
   const result = query.get(args)
   return (result)
-    ? r.from(e.idpConnectionParser.parse(snakeToCamel(result)))
+    ? r.from(e.idpConnectionParser.parse(snakeToCamel(intsToBools(result, ["sp_allow_idp_initiated"]))))
     : r.fail(`Invalid IdP entity ID: ${ args.idpEntityId }. No connection found`)
 }
 
@@ -78,6 +111,8 @@ export const insertSpConnection = (db: Database, connection: e.SpConnection): vo
   e.spConnectionParser.parse(connection)
   using query = db.query(`
     INSERT INTO sp_connection (
+      id,
+      name,
       idp_entity_id,
       idp_sso_url,
       private_key,
@@ -87,6 +122,8 @@ export const insertSpConnection = (db: Database, connection: e.SpConnection): vo
       sp_acs_url
     )
     VALUES (
+      $id,
+      $name,
       $idpEntityId,
       $idpSsoUrl,
       $privateKey,
@@ -101,6 +138,8 @@ export const insertSpConnection = (db: Database, connection: e.SpConnection): vo
 export const getSpConnection = (db: Database, args: { spEntityId: string }): r.Result<e.SpConnection> => {
   using query = db.query(`
     SELECT
+      id,
+      name,
       idp_entity_id,
       idp_sso_url,
       private_key,

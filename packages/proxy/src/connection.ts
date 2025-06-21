@@ -37,6 +37,8 @@ export const initializeConnections = (db: Database) => {
 
   // the connection to the Service provider
   const spConnection: saml.SpConnection = {
+    id: crypto.randomUUID(),
+    name: "Test SP",
     // IdP (my) properties
     idpEntityId: `${ env.proxyBaseUrl }/proxy`,
     idpSsoUrl: `${ env.proxyBaseUrl }/proxy/sso`,
@@ -60,9 +62,12 @@ export const initializeConnections = (db: Database) => {
 
   // the connection to the IdP
   const idpConnection: saml.IdpConnection = {
+    id: crypto.randomUUID(),
+    name: "Test IDP",
     // SP (my) properties
     spEntityId: `${ env.proxyBaseUrl }/proxy`,
     spAcsUrl: `${ env.proxyBaseUrl }/proxy/acs`,
+    spAllowIdpInitiated: true,
     // IDP (their) properites
     idpEntityId: `${ env.idpBaseUrl }/test-idp`,
     idpSsoUrl: `${ env.idpBaseUrl }/idp/sso`,

@@ -1,6 +1,8 @@
 CREATE TABLE sp_connection (
+    id TEXT PRIMARY KEY,
+    name TEXT,
     -- SP (their) properties
-    sp_entity_id TEXT PRIMARY KEY,
+    sp_entity_id TEXT,
     sp_acs_url TEXT,
     -- IdP (my) properties
     idp_entity_id TEXT,

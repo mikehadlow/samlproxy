@@ -33,9 +33,12 @@ const loadCert = (args: { keysBasePath: string, certificateFile: string }): stri
 }
 
 const directIdpConnection: saml.IdpConnection = {
+  id: crypto.randomUUID(),
+  name: "Direct To IdP",
   // SP (my) properties
   spEntityId: `${env.spUrlBase}/test-sp`,
   spAcsUrl: `${env.spUrlBase}/sp/acs`,
+  spAllowIdpInitiated: true,
   // IdP (their) properties
   idpEntityId: `${env.idpUrlBase}/test-idp`,
   idpSsoUrl: `${env.idpUrlBase}/idp/sso`,
@@ -47,9 +50,12 @@ const directIdpConnection: saml.IdpConnection = {
 }
 
 const proxyConnection: saml.IdpConnection = {
+  id: crypto.randomUUID(),
+  name: "Via Proxy",
   // SP (my) properties
   spEntityId: `${env.spUrlBase}/test-sp`,
   spAcsUrl: `${env.spUrlBase}/sp/acs`,
+  spAllowIdpInitiated: true,
   // IdP (their) properties
   idpEntityId: `${env.proxyUrlBase}/proxy`,
   idpSsoUrl: `${env.proxyUrlBase}/proxy/sso`,
