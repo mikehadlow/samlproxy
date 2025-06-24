@@ -14,6 +14,7 @@ describe("db", () => {
   test("recordRelayState should insert, consumeRelayState should return the same", () => {
     const args = {
       relayState: crypto.randomUUID(),
+      requestId: crypto.randomUUID(),
       spEntityId: "the-sp-entity-id",
     }
     const con = createDb([proxyTables])
@@ -28,6 +29,7 @@ describe("db", () => {
     expect(r.isOk(result)).toBeTrue()
     if(r.isFail(result)) throw new Error("type coercion")
     expect(result.value.relay_state).toEqual(args.relayState)
+    expect(result.value.request_id).toEqual(args.requestId)
     expect(result.value.sp_entity_id).toEqual(args.spEntityId)
     expect(result.value.timestamp).toBeNumber()
     expect(result.value.used).toEqual(0)

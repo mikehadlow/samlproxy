@@ -43,8 +43,9 @@ export const generateAuthnRequest = (args: { connection: e.IdpConnection, relayS
       Location: connection.idpSsoUrl,
     }],
   })
-  const { context } = sp.createLoginRequest(idp, 'redirect')
+  const { context, id } = sp.createLoginRequest(idp, 'redirect')
   return {
+    id,
     url: context,
   }
 }

@@ -1,5 +1,6 @@
 CREATE TABLE relay_state (
     relay_state TEXT PRIMARY KEY,
+    request_id TEXT,
     sp_entity_id TEXT,
     timestamp INT,
     used INT -- 1 or 0

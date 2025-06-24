@@ -36,6 +36,7 @@ export const spConnectionParser = z.object({
 export type SpConnection = z.infer<typeof spConnectionParser>
 
 export type AuthnRequest = {
+  id: string,
   url: string,
 }
 

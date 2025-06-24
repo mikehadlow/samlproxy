@@ -81,12 +81,14 @@ app.get("/proxy/sso", async (c) => {
   const aunthnRequestResult = r.map(
     r.merge2(idpConnectionResult, requestResult),
     (ctx) => {
+      const request = saml.generateAuthnRequest({ connection: ctx.a, relayState: ctx.b.RelayState })
       // record the relaystate and SP entityId in the db
       recordRelayState(con, {
         relayState: ctx.b.RelayState,
+        requestId: request.id,
         spEntityId: ctx.a.spEntityId,
       })
-      return saml.generateAuthnRequest({ connection: ctx.a, relayState: ctx.b.RelayState })
+      return request
     })
 
   if (r.isOk(aunthnRequestResult)) {
@@ -119,7 +121,7 @@ app.post("/proxy/acs", async (c) => {
       const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
       return r.bind(
         relayStateResult,
-        (relayState) => relayState.sp_entity_id === ctx.b.spEntityId
+        (relayState) => (relayState.sp_entity_id === ctx.b.spEntityId && relayState.request_id === ctx.c.inResponseTo)
           ? r.voidResult
           : r.fail(`SP Error invalid spEntityId: expected: ${relayState.sp_entity_id}, got: ${ctx.b.spEntityId}`)
       )
