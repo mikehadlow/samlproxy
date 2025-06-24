@@ -7,6 +7,7 @@ describe("db", () => {
   test("recordRelayState should insert, consumeRelayState should return the same", () => {
     const args = {
       relayState: crypto.randomUUID(),
+      requestId: crypto.randomUUID(),
       email: "joe@blogs.com",
     }
     const con = createDb([spPrivateTables])
@@ -21,6 +22,7 @@ describe("db", () => {
     expect(r.isOk(result)).toBeTrue()
     if(r.isFail(result)) throw new Error("expected OK here!") // irritating need for type coeertion
     expect(result.value.relay_state).toEqual(args.relayState)
+    expect(result.value.request_id).toEqual(args.requestId)
     expect(result.value.email).toEqual(args.email)
     expect(result.value.timestamp).toBeNumber()
     expect(result.value.used).toEqual(0)

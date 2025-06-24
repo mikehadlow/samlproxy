@@ -9,6 +9,7 @@ const createSql = `${__dirname}/db.sql`
 
 const relayStateParser = z.object({
   relay_state: z.string(),
+  request_id: z.string(),
   email: z.email(),
   timestamp: z.number(),
   used: z.literal([0, 1]),
@@ -20,18 +21,27 @@ export const spPrivateTables = (db: Database) => {
   db.exec(sql)
 }
 
-export const recordRelayState = (db: Database, args: { relayState: string, email: string }) => {
-  const { relayState, email } = args
+export const recordRelayState = (db: Database, args: {
+  relayState: string,
+  requestId: string,
+  email: string }) => {
+  const {
+    relayState,
+    requestId,
+    email
+  } = args
   using query = db.query(`INSERT INTO relay_state
-    ( relay_state, email, timestamp, used )
+    ( relay_state, request_id, email, timestamp, used )
     VALUES (
       $relayState,
+      $requestId,
       $email,
       $timestamp,
       $used
     );`)
   query.run({
     relayState,
+    requestId,
     email,
     timestamp: Date.now(),
     used: 0,
@@ -40,7 +50,7 @@ export const recordRelayState = (db: Database, args: { relayState: string, email
 
 export const consumeRelayState = (db: Database, args: { relayState: string }): r.Result<RelayState> => {
   const { relayState } = args
-  using query = db.query(`SELECT relay_state, email, timestamp, used
+  using query = db.query(`SELECT relay_state, request_id, email, timestamp, used
     FROM relay_state
     WHERE relay_state = $relayState
     AND used = 0

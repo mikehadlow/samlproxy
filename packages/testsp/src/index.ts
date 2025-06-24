@@ -117,13 +117,15 @@ app.post("/login", async (c) => {
   const aunthnRequestResult = r.map(connectionResult, (connection) => {
     // record the relaystate and email in the db
     const relayState = `rs-${crypto.randomUUID()}`
+    const request = saml.generateAuthnRequest({ connection, relayState })
     r.run(userResult, (user) => {
       recordRelayState(con, {
         relayState,
+        requestId: request.id,
         email: user.email,
       })
     })
-    return saml.generateAuthnRequest({ connection, relayState })
+    return request
   })
 
   if (r.isOk(aunthnRequestResult)) {
@@ -156,7 +158,7 @@ app.post("/sp/acs", async (c) => {
       const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
       return r.bind(
         relayStateResult,
-        (relayState) => relayState.email === ctx.b.nameID
+        (relayState) => (relayState.email === ctx.b.nameID && relayState.request_id === ctx.b.inResponseTo)
           ? r.voidResult // success
           : r.fail(`SP Error invalid email: expected: ${relayState.email}, got: ${ctx.b.nameID}`)
       )
