@@ -112,9 +112,9 @@ app.post("/proxy/acs", async (c) => {
       // if no relayState is given, assume an IdP-iniitated request
       if(!ctx.a.RelayState) {
         // confirm that the assertion does not have an inResponseTo id set.
-        return ctx.c.inResponseTo
-          ? r.fail("An IdP initiated request must not have an inResponseTo id set.")
-          : r.voidResult // success
+        return ( ctx.c.inResponseTo === undefined && ctx.b.spAllowIdpInitiated )
+          ? r.voidResult // success
+          : r.fail("An IdP initiated request must not have an inResponseTo id set.")
       }
       const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
       return r.bind(
