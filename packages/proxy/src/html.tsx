@@ -59,7 +59,7 @@ export const Error = (props: {
 export const Assertion = (props: {
   acsUrl: string,
   assertion: string,
-  relayState: string,
+  relayState?: string,
   nonce: string,
 }) =>
   html`

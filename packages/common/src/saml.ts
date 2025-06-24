@@ -91,15 +91,15 @@ export const validateAuthnRequest = (args: {
 
 export const generateAssertion = async (args: {
     connection: e.SpConnection,
-    requestId: string,
-    relayState: string,
     user: e.User,
+    requestId?: string,
+    relayState?: string,
   }): Promise<e.Assertion> => {
   const {
     connection,
-    relayState,
-    requestId,
     user,
+    requestId,
+    relayState,
   } = args
   const assertionTemplate = fs.readFileSync(path.join(__dirname, 'assertion-template.xml'), 'utf8')
   const sp = samlify.ServiceProvider({

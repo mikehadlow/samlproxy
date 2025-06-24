@@ -4,7 +4,7 @@ import Mustache from "mustache"
 export const createTemplateCallback = (args: {
   connection: e.SpConnection,
   user: e.User,
-  requestId: string,
+  requestId?: string,
 }) => (template: string) => {
   const {
     connection,
@@ -30,7 +30,7 @@ export const createTemplateCallback = (args: {
     SubjectConfirmationDataNotOnOrAfter: fiveMinutesLater.toISOString(),
     AssertionConsumerServiceURL: connection.spAcsUrl,
     EntityID: connection.spEntityId,
-    InResponseTo: requestId,
+    InResponseTo: requestId ? `InResponseTo="${requestId}"` : "",
     StatusCode: "urn:oasis:names:tc:SAML:2.0:status:Success",
   }
   return {

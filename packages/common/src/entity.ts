@@ -51,12 +51,12 @@ export type Assertion = {
   id: string,
   assertion: string,
   acsUrl: string,
-  relayState: string,
+  relayState?: string,
 }
 
 export type AssertionExtract = {
   id: string
-  inResponseTo: string
+  inResponseTo?: string
   issuer: string
   audience: string
   issueInstant: Date

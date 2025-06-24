@@ -183,6 +183,45 @@ describe("saml", () => {
     expect(now < parsedAssertion.notOnOrAfter).toBeTrue()
   })
 
+  test("generateAssertion should work for IdP initiated flow", async () => {
+    // arrange
+    const connection: e.SpConnection = {
+      id: crypto.randomUUID(),
+      name: "My SP",
+      spEntityId: "the-sp-entity-id",
+      spAcsUrl: "https://www.example-sp.com/acs",
+      idpEntityId: "the-idp-entity-id",
+      idpSsoUrl: "https://www.example-idp.com/sso",
+      privateKey: assets.testPrivateKey,
+      privateKeyPassword: assets.testPrivateKeyPassword,
+      signingCertificate: assets.testPublicKey,
+    }
+    const user: e.User = {
+      email: "leo@hadlow.com"
+    }
+
+    // act
+    const result = await saml.generateAssertion({ connection, user })
+
+    // assert
+    expect(result.acsUrl).toEqual(connection.spAcsUrl)
+    expect(result.relayState).toBeUndefined()
+    // const xml = samlify.Utility.base64Decode(result.assertion, false)
+    // console.log(xml)
+    const parsedAssertion = saml.parseAssertion(result.assertion)
+    expect(parsedAssertion.inResponseTo).toBeUndefined()
+    expect(parsedAssertion.issuer).toEqual(connection.idpEntityId)
+    expect(parsedAssertion.audience).toEqual(connection.spEntityId)
+    expect(parsedAssertion.nameID).toEqual(user.email)
+    expect(parsedAssertion.destination).toEqual(connection.spAcsUrl)
+    const now = new Date()
+    expect(parsedAssertion.issueInstant).toBeValidDate()
+    expect(parsedAssertion.notBefore).toBeValidDate()
+    expect(parsedAssertion.notOnOrAfter).toBeValidDate()
+    expect(now > parsedAssertion.notBefore).toBeTrue()
+    expect(now < parsedAssertion.notOnOrAfter).toBeTrue()
+  })
+
   test("validateAssertion should work", async () => {
     const connectionCommon = {
       id: crypto.randomUUID(),

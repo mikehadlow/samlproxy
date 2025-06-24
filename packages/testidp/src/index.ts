@@ -1,4 +1,4 @@
-import { getAllSpConnections, getSpConnection } from "common/db"
+import { getAllSpConnections, getSpConnection, getSpConnectionById } from "common/db"
 import * as r from "common/result"
 import * as saml from "common/saml"
 import { cspMiddleware, type ContextWithNonce } from "common/hono"
@@ -162,6 +162,24 @@ app.get("/idp/sso", authMiddleware, async (c) => {
   }
   else {
     console.log(`IdP Error validating authnRequest: ${result.message}`)
+    return errorResult(c, result)
+  }
+})
+
+app.get("/idp/iif/:connectionId", authMiddleware, async (c) => {
+  const connectionId = c.req.param("connectionId");
+
+  const connectionResult = getSpConnectionById(con, { id: connectionId })
+
+  const result = await r.mapAsync(
+    connectionResult,
+    (connection) => saml.generateAssertion({ connection, user: { email: c.var.session.username, } }))
+
+  if (r.isOk(result)) {
+    return c.html(html.Assertion({ ...result.value, nonce: c.var.nonce }))
+  }
+  else {
+    console.log(`IdP Error generating assertion: ${result.message}`)
     return errorResult(c, result)
   }
 })

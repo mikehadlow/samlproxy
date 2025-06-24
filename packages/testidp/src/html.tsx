@@ -27,7 +27,9 @@ export const Home = (props: {
   connections: SpConnection[],
 }) => {
   const connectionList = props.connections.map(connection => (
-    <li className="cell box has-background-info-dark" key={connection.id}>{connection.name}</li>
+    <li key={connection.id}>
+      <a className="cell box has-background-info-dark" href={ `/idp/iif/${connection.id}`}>{connection.name}</a>
+    </li>
   ))
   return (
     <Layout {...props.siteData }>
@@ -104,7 +106,7 @@ export const Error = (props: {
 export const Assertion = (props: {
   acsUrl: string,
   assertion: string,
-  relayState: string,
+  relayState?: string,
   nonce: string,
 }) =>
   html`
