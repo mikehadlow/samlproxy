@@ -146,11 +146,18 @@ app.post("/sp/acs", async (c) => {
   const relayStateValidationResult = r.validate(
     r.merge3(formResult, assertionExtractResult, connectionResult),
     (ctx) => {
+      // if no relayState is given, assume an IdP-iniitated request
+      if(!ctx.a.RelayState) {
+        // confirm that the assertion does not have an inResponseTo id set.
+        return ctx.b.inResponseTo
+          ? r.fail("An IdP initiated request must not have an inResponseTo id set.")
+          : r.voidResult // success
+      }
       const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
       return r.bind(
         relayStateResult,
         (relayState) => relayState.email === ctx.b.nameID
-          ? r.voidResult
+          ? r.voidResult // success
           : r.fail(`SP Error invalid email: expected: ${relayState.email}, got: ${ctx.b.nameID}`)
       )
     })

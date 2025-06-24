@@ -107,8 +107,15 @@ app.post("/proxy/acs", async (c) => {
 
   // validate the relayState
   const validateRelayStateResult = r.validate(
-    r.merge2(formResult, idpConnectionResult),
+    r.merge3(formResult, idpConnectionResult, assertionExtractResult),
     (ctx) => {
+      // if no relayState is given, assume an IdP-iniitated request
+      if(!ctx.a.RelayState) {
+        // confirm that the assertion does not have an inResponseTo id set.
+        return ctx.c.inResponseTo
+          ? r.fail("An IdP initiated request must not have an inResponseTo id set.")
+          : r.voidResult // success
+      }
       const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
       return r.bind(
         relayStateResult,
@@ -135,13 +142,17 @@ app.post("/proxy/acs", async (c) => {
 
   const assertionProps = r.map(
     r.merge3(spConnectionResult, formResult, assertionExtractResult),
-    (ctx) => ({
-    user: {
-      email: ctx.c.nameID,
-    },
-    relayState: ctx.b.RelayState,
-    requestId: ctx.c.id,
-  }))
+    (ctx) => (ctx.b.RelayState) ? ({
+      user: {
+        email: ctx.c.nameID,
+      },
+      relayState: ctx.b.RelayState,
+      requestId: ctx.c.id,
+    }) : ({
+      user: {
+        email: ctx.c.nameID,
+      },
+    }))
 
   const result = await r.mapAsync(
     r.merge2(spConnectionResult, assertionProps),
