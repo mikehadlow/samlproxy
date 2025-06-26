@@ -1,0 +1,22 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.container svg {
+    width: 500px;
+    height: 500px;
+}
+.logo {
+    font: bold 96px sans-serif;
+    fill: #ff00ff;
+}
+.small-circle {
+    stroke: none;
+    stroke-width: 1;
+    fill: #ff00ff;
+}
+.form-container {
+    display: none;
+}

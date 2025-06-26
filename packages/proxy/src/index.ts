@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono"
+import { serveStatic } from "hono/bun"
 import { logger } from 'hono/logger'
 import { cspMiddleware, type ContextWithNonce } from "common/hono"
 import * as r from "common/result"
@@ -28,8 +29,18 @@ const con = initDb()
 
 const siteData = (title: string, nonce: string): html.SiteData => ({ title, nonce })
 
+const cssFile = Bun.file("./static/css/assertion.css")
+if (await cssFile.exists()) {
+  console.log("Assertion CSS file found")
+}
+else {
+  console.log("Assertion CSS file not found")
+}
+
 const app = new Hono<ContextWithNonce>()
 app.use(logger())
+app.use("/js/*", serveStatic({ root: "./static" }))
+app.use("/css/*", serveStatic({ root: "./static" }))
 app.use(cspMiddleware())
 
 const errorResult = (c: Context, fail: r.Fail) => {
@@ -181,14 +192,6 @@ app.notFound((c) => {
   } as const
   c.status(props.status)
   return c.html(html.Error(props).toString())
-})
-
-app.get("/auto-form-submission.js", (c) => {
-  c.header("Content-Type", "text/javascript")
-  return c.text(`
-    const myForm = document.getElementById("assertion-form");
-    myForm.submit();
-    `)
 })
 
 export default app
