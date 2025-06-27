@@ -143,9 +143,17 @@ app.post("/sp/acs", async (c) => {
   const formResult = r.attempt(() => assertionForm.parse(body))
   const assertionExtractResult = r.map(formResult, (form) => saml.parseAssertion(form.SAMLResponse))
 
+  const userValidationResult = r.validate(assertionExtractResult, (assertionExtract) => {
+    const userResult = getUser(con, { email: assertionExtract.nameID })
+    return r.bind(userResult, (user) =>
+      (user.idpEntityId === assertionExtract.issuer)
+        ? r.voidResult
+        : r.fail(`Invalid connection for ${user.email}`))
+  })
+
   const connectionResult = r.bind(
-    assertionExtractResult,
-    (assertionExtract) => getIdpConnection(con, { idpEntityId: assertionExtract.issuer }))
+    r.merge2(userValidationResult, assertionExtractResult),
+    (ctx) => getIdpConnection(con, { idpEntityId: ctx.b.issuer }))
 
   // validate the relayState
   const relayStateValidationResult = r.validate(
