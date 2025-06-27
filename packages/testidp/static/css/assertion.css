@@ -1,0 +1,25 @@
+body {
+    background-color: #020202;
+}
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.container svg {
+    width: 500px;
+    height: 500px;
+}
+.logo {
+    font: bold 96px sans-serif;
+    fill: #FF9C3C;
+}
+.small-circle {
+    stroke: none;
+    stroke-width: 1;
+    fill: #FF9C3C;
+}
+.form-container {
+    display: none;
+}

@@ -29,14 +29,6 @@ const con = initDb()
 
 const siteData = (title: string, nonce: string): html.SiteData => ({ title, nonce })
 
-const cssFile = Bun.file("./static/css/assertion.css")
-if (await cssFile.exists()) {
-  console.log("Assertion CSS file found")
-}
-else {
-  console.log("Assertion CSS file not found")
-}
-
 const app = new Hono<ContextWithNonce>()
 app.use(logger())
 app.use("/js/*", serveStatic({ root: "./static" }))

@@ -3,6 +3,7 @@ import * as r from "common/result"
 import * as saml from "common/saml"
 import { cspMiddleware, type ContextWithNonce } from "common/hono"
 import { Hono, type Context } from 'hono'
+import { serveStatic } from "hono/bun"
 import { deleteCookie, getCookie, setCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
 import { logger } from 'hono/logger'
@@ -40,6 +41,8 @@ const con = initDb()
 // const app = new Hono<{ Variables: { nonce: string } }>()
 const app = new Hono<ContextWithNonce>()
 app.use(logger())
+app.use("/js/*", serveStatic({ root: "./static" }))
+app.use("/css/*", serveStatic({ root: "./static" }))
 app.use(cspMiddleware())
 
 const authMiddleware = createMiddleware <{ Variables: { session: Session } }> (async (c, next) => {
@@ -182,14 +185,6 @@ app.get("/idp/iif/:connectionId", authMiddleware, async (c) => {
     console.log(`IdP Error generating assertion: ${result.message}`)
     return errorResult(c, result)
   }
-})
-
-app.get("/auto-form-submission.js", (c) => {
-  c.header("Content-Type", "text/javascript")
-  return c.text(`
-    const myForm = document.getElementById("assertion-form");
-    myForm.submit();
-    `)
 })
 
 export default app

@@ -113,21 +113,55 @@ export const Assertion = (props: {
   <!DOCTYPE html>
   <html>
   <head>
-      <meta charset="utf-8">
-      <title>IdP Assertion</title>
+    <meta charset="utf-8">
+    <title>IdP Assertion</title>
+    <link rel="stylesheet" nonce="${props.nonce}" href="/css/assertion.css">
   </head>
   <body>
-      <section className="section">
-          <div className="container">
-              <h1 className="title">IdP Assertion</h1>
-              <form id="assertion-form" method="post" action="${props.acsUrl}" ...>
-                <input type="hidden" name="SAMLResponse" value="${props.assertion}" />
-                <input type="hidden" name="RelayState" value="${props.relayState}" />
-                <input className="button" type="submit" value="Submit" />
-              </form>
-          </div>
-      </section>
+    <div className="form-container">
+        <form id="assertion-form" hidden method="post" action="${props.acsUrl}" ...>
+            <input type="hidden" name="SAMLResponse" value="${props.assertion}" />
+            <input type="hidden" name="RelayState" value="${props.relayState}" />
+            <input className="button" type="submit" value="Submit" />
+        </form>
+        <div class="container">
+            <svg id="svg">
+                <text
+                    class="logo"
+                    x="50%"
+                    y="50%"
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                >
+                    IdP
+                </text>
+                <g id="innerCircle">
+                    <animateTransform
+                        attributeName="transform"
+                        begin="0s"
+                        dur="10s"
+                        type="rotate"
+                        from="0 250 250"
+                        to="360 250 250"
+                        repeatCount="indefinite"
+                    />
+                </g>
+                <g id="outerCircle">
+                    <animateTransform
+                        attributeName="transform"
+                        begin="0s"
+                        dur="10s"
+                        type="rotate"
+                        from="360 250 250"
+                        to="0 250 250"
+                        repeatCount="indefinite"
+                    />
+                </g>
+            </svg>
+        </div>
+    </div>
   </body>
-  <script lang="text/javascript" nonce="${props.nonce}" src="/auto-form-submission.js"></script>
+  <script lang="ecmascript" nonce="${props.nonce}" src="/js/animation.js"></script>
+  <script lang="ecmascript" nonce="${props.nonce}" src="/js/auto-form-submission.js"></script>
   </html>
   `

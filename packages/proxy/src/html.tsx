@@ -67,53 +67,52 @@ export const Assertion = (props: {
   <html>
   <head>
       <meta charset="utf-8">
-      <title>IdP Assertion</title>
+      <title>Proxy Assertion</title>
       <link rel="stylesheet" nonce="${props.nonce}" href="/css/assertion.css">
   </head>
   <body>
-          <div className="form-container">
-              <form id="assertion-form" hidden method="post" action="${props.acsUrl}" ...>
-                <input type="hidden" name="SAMLResponse" value="${props.assertion}" />
-                <input type="hidden" name="RelayState" value="${props.relayState}" />
-                <input className="button" type="submit" value="Submit" />
-              </form>
-          </div>
-
-      <div class="container">
-          <svg id="svg">
-              <text
-                  class="logo"
-                  x="50%"
-                  y="50%"
-                  text-anchor="middle"
-                  dominant-baseline="middle"
-              >
-                  Proxy
-              </text>
-              <g id="innerCircle">
-                  <animateTransform
-                      attributeName="transform"
-                      begin="0s"
-                      dur="10s"
-                      type="rotate"
-                      from="0 250 250"
-                      to="360 250 250"
-                      repeatCount="indefinite"
-                  />
-              </g>
-              <g id="outerCircle">
-                  <animateTransform
-                      attributeName="transform"
-                      begin="0s"
-                      dur="10s"
-                      type="rotate"
-                      from="360 250 250"
-                      to="0 250 250"
-                      repeatCount="indefinite"
-                  />
-              </g>
-          </svg>
-      </div>
+    <div className="form-container">
+        <form id="assertion-form" hidden method="post" action="${props.acsUrl}" ...>
+        <input type="hidden" name="SAMLResponse" value="${props.assertion}" />
+        <input type="hidden" name="RelayState" value="${props.relayState}" />
+        <input className="button" type="submit" value="Submit" />
+        </form>
+    </div>
+    <div class="container">
+        <svg id="svg">
+            <text
+                class="logo"
+                x="50%"
+                y="50%"
+                text-anchor="middle"
+                dominant-baseline="middle"
+            >
+                Proxy
+            </text>
+            <g id="innerCircle">
+                <animateTransform
+                    attributeName="transform"
+                    begin="0s"
+                    dur="10s"
+                    type="rotate"
+                    from="0 250 250"
+                    to="360 250 250"
+                    repeatCount="indefinite"
+                />
+            </g>
+            <g id="outerCircle">
+                <animateTransform
+                    attributeName="transform"
+                    begin="0s"
+                    dur="10s"
+                    type="rotate"
+                    from="360 250 250"
+                    to="0 250 250"
+                    repeatCount="indefinite"
+                />
+            </g>
+        </svg>
+    </div>
   </body>
   <script lang="ecmascript" nonce="${props.nonce}" src="/js/animation.js"></script>
   <script lang="ecmascript" nonce="${props.nonce}" src="/js/auto-form-submission.js"></script>
