@@ -14,7 +14,8 @@ const createSql = `${__dirname}/db.sql`
 
 const relayStateParser = z.object({
   relay_state: z.string(),
-  request_id: z.string(),
+  sp_request_id: z.string(),
+  proxy_request_id: z.string(),
   sp_entity_id: z.string(),
   timestamp: z.number(),
   used: z.literal([0, 1]),
@@ -34,13 +35,21 @@ export const proxyTables = (db: Database) => {
 
 export const recordRelayState = (db: Database, args: {
   relayState: string,
-  requestId: string,
+  spRequestId: string,
+  proxyRequestId: string,
   spEntityId: string }) => {
-  using query = db.query(`INSERT INTO relay_state
-    ( relay_state, request_id, sp_entity_id, timestamp, used )
+  using query = db.query(`INSERT INTO relay_state (
+      relay_state,
+      sp_request_id,
+      proxy_request_id,
+      sp_entity_id,
+      timestamp,
+      used
+    )
     VALUES (
       $relayState,
-      $requestId,
+      $spRequestId,
+      $proxyRequestId,
       $spEntityId,
       $timestamp,
       $used
@@ -54,7 +63,13 @@ export const recordRelayState = (db: Database, args: {
 
 export const consumeRelayState = (db: Database, args: { relayState: string }): r.Result<RelayState> => {
   const { relayState } = args
-  using query = db.query(`SELECT relay_state, request_id, sp_entity_id, timestamp, used
+  using query = db.query(`SELECT
+    relay_state,
+    sp_request_id,
+    proxy_request_id,
+    sp_entity_id,
+    timestamp,
+    used
     FROM relay_state
     WHERE relay_state = $relayState
     AND used = 0

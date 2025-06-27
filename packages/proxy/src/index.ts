@@ -82,13 +82,14 @@ app.get("/proxy/sso", async (c) => {
     (link) => getIdpConnection(con, { idpEntityId: link.idpEntityId }))
 
   const aunthnRequestResult = r.map(
-    r.merge2(idpConnectionResult, requestResult),
+    r.merge3(idpConnectionResult, requestResult, parseResult),
     (ctx) => {
       const request = saml.generateAuthnRequest({ connection: ctx.a, relayState: ctx.b.RelayState })
       // record the relaystate and SP entityId in the db
       recordRelayState(con, {
         relayState: ctx.b.RelayState,
-        requestId: request.id,
+        spRequestId: ctx.c.id,
+        proxyRequestId: request.id,
         spEntityId: ctx.a.spEntityId,
       })
       return request
@@ -111,22 +112,32 @@ app.post("/proxy/acs", async (c) => {
     (assertionExtract) => getIdpConnection(con, { idpEntityId: assertionExtract.issuer }))
 
   // validate the relayState
+  const relayStateResult = r.bind(formResult, (form) => consumeRelayState(con, { relayState: form.RelayState }))
   const validateRelayStateResult = r.validate(
     r.merge3(formResult, idpConnectionResult, assertionExtractResult),
     (ctx) => {
       // if no relayState is given, assume an IdP-iniitated request
-      if(!ctx.a.RelayState) {
+      if (!ctx.a.RelayState) {
         // confirm that the assertion does not have an inResponseTo id set.
-        return ( ctx.c.inResponseTo === undefined && ctx.b.spAllowIdpInitiated )
-          ? r.voidResult // success
-          : r.fail("An IdP initiated request must not have an inResponseTo id set.")
+        if (ctx.c.inResponseTo !== undefined) {
+          return r.fail("An IdP initiated request must not have an inResponseTo id set.")
+        }
+        if (!ctx.b.spAllowIdpInitiated) {
+          return r.fail("This connection does not allow IdP-initiated requests.")
+        }
+        return r.voidResult // success
       }
-      const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
       return r.bind(
         relayStateResult,
-        (relayState) => (relayState.sp_entity_id === ctx.b.spEntityId && relayState.request_id === ctx.c.inResponseTo)
-          ? r.voidResult
-          : r.fail(`SP Error invalid spEntityId: expected: ${relayState.sp_entity_id}, got: ${ctx.b.spEntityId}`)
+        (relayState) => {
+          if (relayState.sp_entity_id !== ctx.b.spEntityId) {
+            return r.fail(`SP Error invalid spEntityId: expected: ${relayState.sp_entity_id}, got: ${ctx.b.spEntityId}`)
+          }
+          if (relayState.proxy_request_id !== ctx.c.inResponseTo) {
+            return r.fail(`SP Error invalid requestId: expected: ${relayState.proxy_request_id}, got: ${ctx.c.inResponseTo}`)
+          }
+          return r.voidResult // success
+        }
       )
     })
 
@@ -139,25 +150,32 @@ app.post("/proxy/acs", async (c) => {
   // for the downstream SP
   const linkResult = r.bind(
     idpConnectionResult,
-    (connection) => getLinkedSpEntityId(con,{ idpEntityId: connection.idpEntityId }))
+    (connection) => getLinkedSpEntityId(con, { idpEntityId: connection.idpEntityId }))
 
   const spConnectionResult = r.bind(
     r.merge2(validateAssertionResult, linkResult),
     (ctx) => getSpConnection(con, { spEntityId: ctx.b.spEntityId }))
 
-  const assertionProps = r.map(
+  const assertionProps = r.bind(
     r.merge3(spConnectionResult, formResult, assertionExtractResult),
-    (ctx) => (ctx.b.RelayState) ? ({
-      user: {
-        email: ctx.c.nameID,
-      },
-      relayState: ctx.b.RelayState,
-      requestId: ctx.c.id,
-    }) : ({
-      user: {
-        email: ctx.c.nameID,
-      },
-    }))
+    (ctx) => {
+      if (ctx.b.RelayState) {
+        return r.map(relayStateResult, (rs) => {
+          return {
+            user: {
+              email: ctx.c.nameID,
+            },
+            relayState: ctx.b.RelayState,
+            requestId: rs.sp_request_id,
+          }
+        })
+      }
+      return r.from({
+        user: {
+          email: ctx.c.nameID,
+        },
+      })
+  })
 
   const result = await r.mapAsync(
     r.merge2(spConnectionResult, assertionProps),
