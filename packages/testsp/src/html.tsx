@@ -39,7 +39,7 @@ export const Home = (props: { siteData: SiteData, username: string }) => (
   </Layout>
 )
 
-export const Login = (props: { siteData: SiteData }) => (
+export const Login = (props: { siteData: SiteData, testIdpUrl: string }) => (
   <Layout {...props.siteData }>
       <div className="container">
           <section className="section column is-6">
@@ -53,6 +53,9 @@ export const Login = (props: { siteData: SiteData }) => (
                       <input className="button is-primary" type="submit" value="Login"></input>
                   </div>
               </form>
+              <div className="block">
+                <a href={props.testIdpUrl}>Or login to the IdP first for IdP initiated flow.</a>
+              </div>
           </section>
       </div>
   </Layout>

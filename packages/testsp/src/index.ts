@@ -28,8 +28,10 @@ type Session = z.infer<typeof session>
 
 const env = z.object({
   jwtSecret: z.string().min(32),
+  testIdpUrl: z.url(),
 }).parse({
   jwtSecret: process.env["TEST_SP_JWT_SECRET"],
+  testIdpUrl: process.env["TEST_IDP_URL_BASE"]
 })
 
 const authCookieName = "sp_auth"
@@ -103,7 +105,8 @@ app.get("/login", (c) => {
     siteData: {
       title: "SP Login",
       nonce: c.var["nonce"],
-    }
+    },
+    testIdpUrl: env.testIdpUrl,
   }
   return c.html(html.Login(props).toString())
 })
