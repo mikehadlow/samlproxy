@@ -1,3 +1,6 @@
+body {
+    background-color: #003399;
+}
 .container {
     display: flex;
     justify-content: center;
@@ -10,12 +13,12 @@
 }
 .logo {
     font: bold 96px sans-serif;
-    fill: #ff00ff;
+    fill: #FFCC00;
 }
 .small-circle {
     stroke: none;
     stroke-width: 1;
-    fill: #ff00ff;
+    fill: #FFCC00;
 }
 .form-container {
     display: none;
