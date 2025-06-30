@@ -19,6 +19,7 @@ const processOptions = (args: { package: string; port: number }) =>
   }) as const;
 
 const run = async () => {
+  console.log("Starting the SAML Proxy test cluster (ctr-C to stop)");
   // Spawn the web server processes
   const proxy = spawn(processOptions({ package: "proxy", port: 7272 }));
   const sp = spawn(processOptions({ package: "testsp", port: 7282 }));
