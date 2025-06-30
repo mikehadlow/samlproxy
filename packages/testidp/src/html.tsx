@@ -65,8 +65,8 @@ export const Login = (props: { siteData: SiteData, redirectTo: string }) => (
               <h1 className="title">IdP Login</h1>
               <p className="block">
                   This is the Identity provider login page. In a real system the credentials entered below
-                  would be validated, but this test IdP allows you to enter any email for the username.
-                  It performs no validation or checks of any kind.
+                  would be validated, but this test IdP doesn't require credientials, simply a valid email address
+                  from the list given.
               </p>
               <form className="box" action="/login" method="post">
                   <div className="field">

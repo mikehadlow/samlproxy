@@ -95,12 +95,19 @@ const errorResult = (c: Context, fail: r.Fail) => {
 
 
 app.get("/", authMiddleware, async (c) => {
-  const connections = getAllSpConnections(con)
-  return c.html(html.Home({
-    siteData: siteData("IdP Home", c.var["nonce"]),
-    ...c.var.session,
-    connections,
-  }).toString())
+  const userResult = getUser(con, { email: c.var.session.username })
+  const connectionResult = r.bind(userResult, (user) => getSpConnectionById(con, { id: user.connectionId }))
+  if (r.isOk(connectionResult)) {
+    return c.html(html.Home({
+      siteData: siteData("IdP Home", c.var["nonce"]),
+      ...c.var.session,
+      connections: [connectionResult.value],
+    }).toString())
+  }
+  else {
+    console.log(`Error getting user connection: ${connectionResult.message}`)
+    return errorResult(c, connectionResult)
+  }
 })
 
 app.get("/logout", (c) => {
