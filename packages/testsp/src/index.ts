@@ -7,10 +7,11 @@ import { cspMiddleware, type ContextWithNonce } from "common/hono"
 import * as jwt from "jsonwebtoken"
 import { setCookie, getCookie, deleteCookie } from "hono/cookie"
 import { createMiddleware } from 'hono/factory'
-import { recordRelayState, consumeRelayState, spPrivateTables, getUser } from "./db"
+import { recordRelayState, consumeRelayState, spPrivateTables, getUser, getAllUsersAndConnections } from "./db"
 import { createDb, createIdpConnectionTable, getIdpConnection } from "common/db"
 import { initializeDb } from "./connection"
 import * as html from "./html"
+import { useRef } from 'hono/jsx'
 
 const loginForm = z.object({
   username: z.email(),
@@ -101,12 +102,14 @@ app.get("/logout", (c) => {
 })
 
 app.get("/login", (c) => {
+  const userConnections = getAllUsersAndConnections(con)
   const props = {
     siteData: {
       title: "SP Login",
       nonce: c.var["nonce"],
     },
     testIdpUrl: env.testIdpUrl,
+    userConnections,
   }
   return c.html(html.Login(props).toString())
 })

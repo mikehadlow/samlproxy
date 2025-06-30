@@ -1,4 +1,5 @@
 import { html } from 'hono/html'
+import { type UserConnection } from './entity'
 
 export type SiteData = {
   title: string,
@@ -39,11 +40,26 @@ export const Home = (props: { siteData: SiteData, username: string }) => (
   </Layout>
 )
 
-export const Login = (props: { siteData: SiteData, testIdpUrl: string }) => (
+export const Login = (props: { siteData: SiteData, testIdpUrl: string, userConnections: UserConnection[]}) => {
+  const userConnectionList = props.userConnections.map(user => (
+    <tr>
+      <td>{ user.email }</td>
+      <td>{ user.name }</td>
+    </tr>
+  ))
+  return (
   <Layout {...props.siteData }>
       <div className="container">
           <section className="section column is-6">
               <h1 className="title">SP Login</h1>
+              <p className="block">
+                Login as one of the users below to test the SP login flow, either directly to the IdP, or via the SAML Proxy.
+              </p>
+              <div className="block">
+                <table className="table">
+                  {userConnectionList}
+                </table>
+              </div>
               <form className="box" action="/login" method="post">
                   <div className="field">
                       <label className="label" htmlFor="username">Email:</label>
@@ -59,7 +75,7 @@ export const Login = (props: { siteData: SiteData, testIdpUrl: string }) => (
           </section>
       </div>
   </Layout>
-)
+) }
 
 export const Error = (props: {
   siteData: SiteData,

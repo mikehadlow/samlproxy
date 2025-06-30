@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite"
 import * as fs from "fs"
 import * as z from "zod/v4"
 import * as r from "common/result"
-import { spUserParser, type SpUser } from "./entity"
+import { spUserParser, userConnectionParser, type SpUser, type UserConnection } from "./entity"
 import { snakeToCamel } from "common/db"
 
 const createSql = `${__dirname}/db.sql`
@@ -82,4 +82,13 @@ export const getUser = (db: Database, args: { email: string }): r.Result<SpUser>
     return r.fail("Invalid email.")
   }
   return r.from(spUserParser.parse(snakeToCamel(result)))
+}
+
+export const getAllUsersAndConnections = (db: Database): UserConnection[] => {
+  using query = db.query(`SELECT u.email, c.name
+    FROM user u
+    JOIN idp_connection c ON u.idp_entity_id = c.idp_entity_id
+    ;`)
+  const results = query.all()
+  return results.map((x) => userConnectionParser.parse(x))
 }
