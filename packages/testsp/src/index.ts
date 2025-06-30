@@ -11,7 +11,6 @@ import { recordRelayState, consumeRelayState, spPrivateTables, getUser, getAllUs
 import { createDb, createIdpConnectionTable, getIdpConnection } from "common/db"
 import { initializeDb } from "./connection"
 import * as html from "./html"
-import { useRef } from 'hono/jsx'
 
 const loginForm = z.object({
   username: z.email(),
