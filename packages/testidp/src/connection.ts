@@ -4,6 +4,7 @@ import * as saml from "common/saml"
 import { insertSpConnection } from "common/db"
 import { loadKeys } from "common/keys"
 import * as r from "common/result"
+import { createUser } from "./db"
 
 const env = z.object({
   keysBasePath: z.string().min(6),
@@ -62,4 +63,13 @@ export const initializeConnections = (db: Database) => {
 
   insertSpConnection(db, directSpConnection)
   insertSpConnection(db, proxyConnection)
+
+  createUser(db, {
+    email: "joe@blogs.com",
+    connectionId: directSpConnection.id,
+  })
+  createUser(db, {
+    email: "jane@blogs.com",
+    connectionId: proxyConnection.id,
+  })
 }

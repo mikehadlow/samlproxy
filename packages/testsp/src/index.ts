@@ -167,8 +167,6 @@ app.post("/sp/acs", async (c) => {
           : r.fail("An IdP initiated request must not have an inResponseTo id set.")
       }
       const relayStateResult = consumeRelayState(con, { relayState: ctx.a.RelayState })
-      console.log(JSON.stringify(relayStateResult))
-      console.log("connection inResponseTo: " + ctx.b.inResponseTo)
       return r.bind(
         relayStateResult,
         (relayState) => (relayState.email === ctx.b.nameID && relayState.request_id === ctx.b.inResponseTo)

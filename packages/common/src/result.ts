@@ -56,16 +56,10 @@ export const attempt = <A>(func: () => A): Result<A> =>  map(from(true), func)
 // merge results together into a shared context. This is mainly to avoid deeply nested
 // closures
 export const merge2 = <A, B>(a: Result<A>, b: Result<B>): Result<{ a: A, b: B }> =>
-  isFail(a) ? a
-  : isFail(b) ? b
-  : from({ a: a.value, b: b.value })
+  bind(a, a => map(b, b => ({ a, b })))
 
 export const merge3 = <A, B, C>(a: Result<A>, b: Result<B>, c: Result<C>): Result<{ a: A, b: B, c: C }> =>
-  isFail(a) ? a
-  : isFail(b) ? b
-  : isFail(c) ? c
-  : from({ a: a.value, b: b.value, c: c.value })
-
+  bind(a, a => bind(b, b => map(c, c => ({ a, b, c }))))
 
 // async composition
 export const bindAsync = async <A, B>(a: Result<A>, func: (a: A) => Promise<Result<B>>): Promise<Result<B>> => {

@@ -9,7 +9,7 @@ import { createMiddleware } from 'hono/factory'
 import { logger } from 'hono/logger'
 import * as jwt from "jsonwebtoken"
 import { z } from "zod/v4"
-import { initDb } from "./db"
+import { initDb, getUser } from "./db"
 import * as html from "./html"
 
 const loginForm = z.object({
@@ -137,13 +137,20 @@ app.get("/idp/sso", authMiddleware, async (c) => {
   const parseResult = r.bind(requestResult,
     (request) => saml.parseAuthnRequest({ authnRequest: request.SAMLRequest }))
 
-  // TODO: check that logged in user has access to the given connection
+  const userResult = getUser(con, { email: c.var.session.username })
 
   const connectionResult = r.bind(parseResult,
     (request) => getSpConnection(con, { spEntityId: request.issuer }))
 
+  const validateConnectionResult = r.validate(
+    r.merge2(userResult, connectionResult),
+    (ctx) => (ctx.a.connectionId === ctx.b.id)
+      ? r.voidResult
+      : r.fail("Invalid connection for the logged in user.")
+  )
+
   const validationResult = r.validate(
-    r.merge2(parseResult, connectionResult),
+    r.merge3(parseResult, connectionResult, validateConnectionResult),
     (ctx) => saml.validateAuthnRequest({ connection: ctx.b, details: ctx.a }))
 
   const assertionProps = r.map(
@@ -173,10 +180,16 @@ app.get("/idp/iif/:connectionId", authMiddleware, async (c) => {
   const connectionId = c.req.param("connectionId");
 
   const connectionResult = getSpConnectionById(con, { id: connectionId })
+  const userResult = getUser(con, { email: c.var.session.username })
+
+  const connectionValidationResult = r.validate(
+    r.merge2(userResult, connectionResult),
+    (ctx) => (ctx.a.connectionId === ctx.b.id) ? r.voidResult : r.fail(`Invalid connectionId`)
+  )
 
   const result = await r.mapAsync(
-    connectionResult,
-    (connection) => saml.generateAssertion({ connection, user: { email: c.var.session.username, } }))
+    connectionValidationResult,
+    (ctx) => saml.generateAssertion({ connection: ctx.b, user: { email: ctx.a.email, } }))
 
   if (r.isOk(result)) {
     return c.html(html.Assertion({ ...result.value, nonce: c.var.nonce }))
