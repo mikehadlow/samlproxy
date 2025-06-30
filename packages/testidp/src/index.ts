@@ -9,7 +9,7 @@ import { createMiddleware } from 'hono/factory'
 import { logger } from 'hono/logger'
 import * as jwt from "jsonwebtoken"
 import { z } from "zod/v4"
-import { initDb, getUser } from "./db"
+import { initDb, getUser, getAllUsersAndConnections } from "./db"
 import * as html from "./html"
 
 const loginForm = z.object({
@@ -117,7 +117,8 @@ app.get("/logout", (c) => {
 
 app.get("/login", (c) => {
   const redirectTo = c.req.query(redirectQueryParam) ?? "/"
-  return c.html(html.Login({ siteData: siteData("IdP Login", c.var["nonce"]), redirectTo }).toString())
+  const userConnections = getAllUsersAndConnections(con)
+  return c.html(html.Login({ siteData: siteData("IdP Login", c.var["nonce"]), redirectTo, userConnections }).toString())
 })
 
 app.post("/login", async (c) => {

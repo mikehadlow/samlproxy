@@ -3,8 +3,7 @@ import { Database } from "bun:sqlite"
 import { initializeConnections } from "./connection"
 import * as fs from "fs"
 import * as r from "common/result"
-import { idpUserParser, type IdpUser } from "./entity"
-import * as z from "zod"
+import { idpUserParser, userConnectionParser, type IdpUser, type UserConnection } from "./entity"
 
 const createSql = `${__dirname}/db.sql`
 
@@ -34,16 +33,11 @@ export const getUser = (db: Database, args: { email: string }): r.Result<IdpUser
   return r.from(idpUserParser.parse(snakeToCamel(result)))
 }
 
-const userConnectionParser = z.array(z.object({
-  email: z.string().email(),
-  name: z.string(),
-}))
-
-export const getAllUsersAndConnections = (db: Database): { email: string, name: string }[] => {
+export const getAllUsersAndConnections = (db: Database): UserConnection[] => {
   using query = db.query(`SELECT u.email, c.name
     FROM user u
     JOIN sp_connection c ON u.connection_id = c.id
     ;`)
   const results = query.all()
-  return userConnectionParser.parse(results)
+  return results.map((x) => userConnectionParser.parse(x))
 }

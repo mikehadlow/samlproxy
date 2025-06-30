@@ -5,3 +5,9 @@ export const idpUserParser = z.object({
   connectionId: z.string(),
 })
 export type IdpUser = z.infer<typeof idpUserParser>
+
+export const userConnectionParser = z.object({
+  email: z.string().email(),
+  name: z.string(),
+})
+export type UserConnection = z.infer<typeof userConnectionParser>

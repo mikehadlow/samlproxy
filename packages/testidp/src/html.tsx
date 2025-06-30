@@ -1,5 +1,6 @@
 import { html } from 'hono/html'
 import type { SpConnection } from 'common/saml'
+import type { UserConnection } from './entity'
 
 export type SiteData = {
   title: string,
@@ -58,30 +59,43 @@ export const Home = (props: {
   )
 }
 
-export const Login = (props: { siteData: SiteData, redirectTo: string }) => (
-  <Layout {...props.siteData }>
+export const Login = (props: { siteData: SiteData, redirectTo: string, userConnections: UserConnection[] }) => {
+  const userConnectionList = props.userConnections.map(user => (
+    <tr>
+      <td>{ user.email }</td>
+      <td>{ user.name }</td>
+    </tr>
+  ))
+  return (
+    <Layout {...props.siteData}>
       <div className="container">
-          <section className="section column is-half">
-              <h1 className="title">IdP Login</h1>
-              <p className="block">
-                  This is the Identity provider login page. In a real system the credentials entered below
-                  would be validated, but this test IdP doesn't require credientials, simply a valid email address
-                  from the list given.
-              </p>
-              <form className="box" action="/login" method="post">
-                  <div className="field">
-                      <label className="label" htmlFor="username">Email:</label>
-                      <input className="input" type="text" id="username" name="username" required></input>
-                  </div>
-                  <input type="hidden" id="redirect_to" name="redirect_to" value={props.redirectTo}></input>
-                  <div className="field">
-                      <input className="button is-primary" type="submit" value="Login"></input>
-                  </div>
-              </form>
-          </section>
+        <section className="section column is-half">
+          <h1 className="title">IdP Login</h1>
+          <p className="block">
+            This is the Identity provider login page. In a real system the credentials entered below
+            would be validated, but this test IdP doesn't require credientials, simply a valid email address
+            from the list given.
+          </p>
+          <div className="block">
+            <table className="table">
+              {userConnectionList}
+            </table>
+          </div>
+          <form className="box" action="/login" method="post">
+            <div className="field">
+              <label className="label" htmlFor="username">Email:</label>
+              <input className="input" type="text" id="username" name="username" required></input>
+            </div>
+            <input type="hidden" id="redirect_to" name="redirect_to" value={props.redirectTo}></input>
+            <div className="field">
+              <input className="button is-primary" type="submit" value="Login"></input>
+            </div>
+          </form>
+        </section>
       </div>
-  </Layout>
-)
+    </Layout>
+  )
+}
 
 export const Error = (props: {
   siteData: SiteData,
