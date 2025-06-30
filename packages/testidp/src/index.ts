@@ -115,20 +115,33 @@ app.get("/login", (c) => {
 
 app.post("/login", async (c) => {
   const body = await c.req.parseBody()
-  const login = loginForm.parse(body)
+  const loginResult = r.attempt(() => loginForm.parse(body))
 
   // Here a real IdP would validate the user's credientials.
   // This test IdP accepts whatever is entered.
+  const userResult = r.bind(loginResult, (login) => getUser(con, { email: login.username }))
 
   // The user has authenticated, so now we can issue a JWT
-  const session: Session = { username: login.username }
-  const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
-  setCookie(c, authCookieName, token, {
-    httpOnly: true,
-    maxAge: 60 * 60 * 1000, // 1h
-    sameSite: "Lax",
+  const result = r.run(userResult, (user) => {
+    const session: Session = { username: user.email }
+    const token = jwt.sign(session, env.jwtSecret, { expiresIn: '1h' })
+    setCookie(c, authCookieName, token, {
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000, // 1h
+      sameSite: "Lax",
+    })
   })
-  return c.redirect(login.redirect_to)
+
+  if (r.isOk(result)) {
+    // it is, this is just type narrowing here
+    if (r.isOk(loginResult)) {
+      return c.redirect(loginResult.value.redirect_to)
+    }
+  }
+  else {
+    console.log(`Error logging in user: ${result.message}`)
+    return errorResult(c, result)
+  }
 })
 
 app.get("/idp/sso", authMiddleware, async (c) => {
