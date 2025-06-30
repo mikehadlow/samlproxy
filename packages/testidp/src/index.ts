@@ -1,4 +1,4 @@
-import { getAllSpConnections, getSpConnection, getSpConnectionById } from "common/db"
+import { getSpConnection, getSpConnectionById } from "common/db"
 import * as r from "common/result"
 import * as saml from "common/saml"
 import { cspMiddleware, type ContextWithNonce } from "common/hono"
