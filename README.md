@@ -45,15 +45,19 @@ columns 6
       c2{"IdP"]
     end
 
+    style a stroke:black,fill:#AAE
+    style b stroke:black,fill:#AEA
+    style c stroke:black,fill:#EAA
+
     space:6
     space:2
     db[("Connection<br/>Mapping")]:2
     space:2
 
-    a1-->b1
-    b2-->c1
-    c2-->b4
-    b3-->a2
+    a1--"AuthnReq"-->b1
+    b2--"AuthnReq"-->c1
+    c2--"Assertion"-->b4
+    b3--"Assertion"-->a2
 
     b-->db
 ```
