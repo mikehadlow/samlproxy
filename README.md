@@ -25,21 +25,21 @@ columns 1
 
 ```mermaid
 block-beta
-columns 6
-    block:SP
+columns 5
+    block
     columns 1
       SP
       ACS
     end
     space:1
-    block:Proxy
+    block
     columns 2
       SSO
       Proxy
       ACS
     end
     space:1
-    block:IdP
+    block
     columns 1
       SSO
       IdP
