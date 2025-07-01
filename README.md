@@ -1,9 +1,41 @@
 # samlproxy
 An an example implementation of a SAML IdP Proxy
 
-## TODO:
-1. Super basic TestSp talking to super basic TestIdP.
-1. Configure with SQL Lite.
+# How it works
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant SP as Service Provider (SP)
+    participant IdP as Identity Provider (IdP)
+
+    Note over Browser,IdP: SAML SSO Login Flow
+
+    Browser->>SP: 1. Access protected resource
+    SP->>SP: 2. Check authentication status
+    SP->>SP: 3. Generate SAML AuthnRequest
+    SP->>Browser: 4. HTTP 302 Redirect with AuthnRequest<br/>(Redirect Binding)
+
+    Note over Browser,IdP: User redirected to IdP
+
+    Browser->>IdP: 5. GET request with SAML AuthnRequest<br/>(via redirect URL parameters)
+    IdP->>IdP: 6. Validate AuthnRequest
+    IdP->>Browser: 7. Present login form
+    Browser->>IdP: 8. Submit credentials
+    IdP->>IdP: 9. Authenticate user
+    IdP->>IdP: 10. Generate SAML Assertion
+    IdP->>Browser: 11. Return HTML form with SAML Response<br/>(POST Binding setup)
+
+    Note over Browser,SP: Auto-submit form back to SP
+
+    Browser->>SP: 12. POST SAML Response with Assertion<br/>(POST Binding)
+    SP->>SP: 13. Validate SAML Assertion
+    SP->>SP: 14. Extract user attributes
+    SP->>SP: 15. Create user session
+    SP->>Browser: 16. Grant access to protected resource
+
+    Note over Browser,SP: User successfully authenticated
+```
 
 ## Useful links
 * [SAML Technical Spec](https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0-cd-02.html)
