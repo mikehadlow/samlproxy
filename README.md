@@ -32,6 +32,9 @@ columns 5
     end
 
     a1-->b1
+    b2-->c1
+    c2-->b4
+    b3-->a2
 ```
 
 ```mermaid
