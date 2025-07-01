@@ -45,10 +45,17 @@ columns 6
       c2{"IdP"]
     end
 
+    space:6
+    space:2
+    db["Connection<br/>Mapping"]:2
+    space:2
+
     a1-->b1
     b2-->c1
     c2-->b4
     b3-->a2
+
+    b-->db
 ```
 
 ```mermaid
