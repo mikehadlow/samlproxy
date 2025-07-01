@@ -7,6 +7,17 @@ An an example implementation of a SAML IdP Proxy
 block-beta
 columns 5
 
+    %% Headers
+    h1["SP"]
+    space
+    h2["Proxy"]
+    space
+    h3["IdP"]
+
+    style h1 fill:none
+    style h2 fill:none
+    style h3 fill:none
+
     block
     columns 1
       a1["SP"]
