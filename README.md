@@ -47,7 +47,7 @@ columns 6
 
     space:6
     space:2
-    db["Connection<br/>Mapping"]:2
+    db[("Connection<br/>Mapping")]:2
     space:2
 
     a1-->b1
