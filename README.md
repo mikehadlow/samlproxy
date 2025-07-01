@@ -28,21 +28,22 @@ block-beta
 columns 5
     block
     columns 1
-      SP
-      ACS
+      a1["SP"]
+      a2["ACS"]
     end
     space:1
     block
     columns 2
-      SSO
-      Proxy
-      ACS
+      b1["SSO"]
+      b2["Proxy"]
+      b3["Proxy"]
+      b4["ACS"]
     end
     space:1
     block
     columns 1
-      SSO
-      IdP
+      c1["SSO"]
+      c2{"IdP"]
     end
 ```
 
