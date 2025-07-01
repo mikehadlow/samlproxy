@@ -1,16 +1,16 @@
-# samlproxy
+# SAML Proxy
 An an example implementation of a SAML IdP Proxy
 
 # How it works
 
 ```mermaid
 block-beta
-columns 5
+columns 6
 
     %% Headers
     h1["SP"]
     space
-    h2["Proxy"]
+    h2["Proxy"]:2
     space
     h3["IdP"]
 
@@ -18,7 +18,8 @@ columns 5
     style h2 fill:none,stroke:none
     style h3 fill:none,stroke:none
 
-    block
+    %% Service Provider
+    block:a
     columns 1
       a1["SP"]
       a2["ACS"]
@@ -26,7 +27,8 @@ columns 5
 
     space:1
 
-    block
+    %% Proxy
+    block:b:2
     columns 2
       b1["SSO"]
       b2["SP"]
@@ -36,7 +38,8 @@ columns 5
 
     space:1
 
-    block
+    %% IdP
+    block:c
     columns 1
       c1["SSO"]
       c2{"IdP"]
