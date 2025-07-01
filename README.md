@@ -7,6 +7,7 @@ An an example implementation of a SAML IdP Proxy
 sequenceDiagram
     participant Browser
     participant SP as Service Provider (SP)
+    participant Proxy as SAML Proxy
     participant IdP as Identity Provider (IdP)
 
     Note over Browser,IdP: SAML SSO Login Flow
@@ -16,7 +17,14 @@ sequenceDiagram
     SP->>SP: 3. Generate SAML AuthnRequest
     SP->>Browser: 4. HTTP 302 Redirect with AuthnRequest<br/>(Redirect Binding)
 
-    Note over Browser,IdP: User redirected to IdP
+    Note over Browser,Proxy: User redirected to Proxy
+
+    Browser->>Proxy: 5. GET request with SAML AuthnRequest<br/>(via redirect URL parameters)
+    Proxy->>Proxy: 6. Validate AuthnRequest
+    Proxy->>Proxy: 6. Lookup IdP connection based on request
+    Proxy->>Browser: 4. HTTP 302 Redirect with AuthnRequest<br/>(Redirect Binding)
+
+    Note over Proxy,IdP: User redirected to IdP
 
     Browser->>IdP: 5. GET request with SAML AuthnRequest<br/>(via redirect URL parameters)
     IdP->>IdP: 6. Validate AuthnRequest
@@ -25,6 +33,14 @@ sequenceDiagram
     IdP->>IdP: 9. Authenticate user
     IdP->>IdP: 10. Generate SAML Assertion
     IdP->>Browser: 11. Return HTML form with SAML Response<br/>(POST Binding setup)
+
+    Note over Browser,SP: Auto-submit form back to Proxy
+
+    Browser->>Proxy: 12. POST SAML Response with Assertion<br/>(POST Binding)
+    Proxy->>Proxy: 13. Validate SAML Assertion
+    Proxy->>Proxy: 14. Extract user attributes
+    Proxy->>Proxy: 10. Generate New SAML Assertion
+    Proxy->>Browser: 11. Return HTML form with SAML Response<br/>(POST Binding setup)
 
     Note over Browser,SP: Auto-submit form back to SP
 
