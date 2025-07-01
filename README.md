@@ -8,22 +8,17 @@ block-beta
     columns 6
     block:SP:1
         columns 1
-        SP
-        ACS
+        SP ACS
     end
     space:1
     block:Proxy:2
         columns 2
-        SSO
-        Proxy
-        Proxy
-        ACS
+        SSO Proxy Proxy ACS
     end
     space:1
     block:IdP:1
         columns 1
-        SSO
-        IdP
+        SSO IdP
     end
 ```
 
