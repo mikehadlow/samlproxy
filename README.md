@@ -39,6 +39,7 @@ sequenceDiagram
     Browser->>Proxy: 12. POST SAML Response with Assertion<br/>(POST Binding)
     Proxy->>Proxy: 13. Validate SAML Assertion
     Proxy->>Proxy: 14. Extract user attributes
+    Proxy->>Proxy: 14. Lookup SP connection based on assertion
     Proxy->>Proxy: 10. Generate New SAML Assertion
     Proxy->>Browser: 11. Return HTML form with SAML Response<br/>(POST Binding setup)
 
