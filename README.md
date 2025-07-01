@@ -5,12 +5,26 @@ An an example implementation of a SAML IdP Proxy
 
 ```mermaid
 block-beta
-columns 5
-    SP
+    columns 5
+    block:SP
+        columns 1
+        SP
+        ACS
+    end
     space
-    Proxy
+    block:Proxy
+        columns 2
+        SSO
+        Proxy
+        Proxy
+        ACS
+    end
     space
-    IdP
+    block:IdP
+        columns 1
+        SSO
+        IdP
+    end
 ```
 
 ```mermaid
