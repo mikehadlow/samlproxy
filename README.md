@@ -8,11 +8,11 @@ block-beta
 columns 6
 
     %% Headers
-    h1["SP"]
+    h1["Service<br/>Provider"]
     space
     h2["Proxy"]:2
     space
-    h3["IdP"]
+    h3["Identity<br/>Provider"]
 
     style h1 fill:none,stroke:none
     style h2 fill:none,stroke:none
