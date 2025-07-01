@@ -4,6 +4,16 @@ An an example implementation of a SAML IdP Proxy
 # How it works
 
 ```mermaid
+block-beta
+columns 5
+    SP
+    space
+    Proxy
+    space
+    IdP
+```
+
+```mermaid
 sequenceDiagram
     participant Browser
     participant SP as Service Provider (SP)
