@@ -14,9 +14,9 @@ columns 5
     space
     h3["IdP"]
 
-    style h1 fill:none
-    style h2 fill:none
-    style h3 fill:none
+    style h1 fill:none,stroke:none
+    style h2 fill:none,stroke:none
+    style h3 fill:none,stroke:none
 
     block
     columns 1
