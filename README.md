@@ -1,7 +1,15 @@
 # SAML Proxy
+
+__WARNING__: This project is provided as an example only. It comes with no waranty whatsoever. Use at entirely your own risk.
+
 An an example implementation of a SAML IdP Proxy
 
-# How it works
+A SAML IdP Proxy is a stand-alone service that sits between an SP (Service Provider - usually your application,
+or a 3rd party IaaS), and an IdP (Identity Provider - the authentication system. This can
+be an in-house implementation or a 3rd party provider such as AWS Cognito, Okta, or Auth0). It can
+route, modify, log, and enhance SAML interactions.
+
+The SAML Proxy acts as an IdP to your SP, and an SP to your IdP, and provides a mapping between them. See the diagram below:
 
 ```mermaid
 block-beta
@@ -62,6 +70,48 @@ columns 6
     b-->db
 ```
 
+This project provides a fully functional implementation of a SAML Proxy indented as an example, or starting point for your own implementation.
+It also includes a Test SP and a Test IdP for demonstration purposes, but could also be the starting point for your own implementation. See
+below for instructions on how to run and inspect the demo.
+
+## Why would I need one?
+
+There are many reasons why you might need, or want, to use a SAML IdP Proxy. Fundamentally it allows you to decouple your SSO enabled
+applications from your identity providers. Some suggestions, but by no means an exhaustive list:
+
+* __Avoid IaaS vendor lock-in__: Every B2B SaaS product needs to offer "enterprise SSO" - SAML authentication - to its customers.
+It's an enormous time saver for many SaaS companies to use an Identity As A Service (IaaS) provider, such as OAuth, AWS Cognito, or Clerk
+for this. But with each of your customers individually configuring their own IdP to talk to your IaaS provider, it makes for a very
+deep lock-in. Without a proxy you will have to persuade each customer in turn to reconfigure their IdP before you can escape from your
+IaaS. With a proxy, you can migrate all your customers instantly to a different IaaS, or your own SP implementation.
+
+* __Auditing monitoring and logging__: IaaS providers can often be opaque black boxes when it comes to auditing, monitoring, or logging,
+which can make fulfilling regulatory requirements or diagnosing authentication issues difficult. A SAML Proxy can provide a tap for
+comprehensive logging of all SAML operations.
+* __Identity Provider Consolidation__: Provide a single IdP endpoint to applications while routing to different IdPs based on arbitrary
+criteria (email domain, user ID, name of cat, whatever).
+* __Service Provider Consolidation__: Provide a single SP endpoint for multiple applications and route appropriately. This could be
+useful in a company merger scenario for example.
+* __Attribute Transformation__: Modify SAML Assertion attributes to match the expectations of your applications. For example, your
+SP might expect an `employeeId`, but your IdP can only provide a `userId`.
+* __Enhanced Security__: Add additional authentication factors, session management, or security policies. Perhaps you want to enforce
+fully encrypted assertions, but your service provider can't accept them.
+* __Anonymize__: You might want to hide the details of your SPs from IdP(s) or vice-versa.
+
+## How to run the demo
+
+1. Install [Bun](https://bun.sh/) by following the instructions on the [Bun website](https://bun.sh/docs/installation)
+1. Clone the repository.
+1. Execute `bun install` in the root directory.
+1. Execute `bun run dev` in the root directory.
+1. This will launch a cluster of SP, Proxy, and IdP. Use the displayed localhost URL to navigate to the SP.
+1. Login as one of the displayed users. Watch as you are redirected to the IdP to authenticate.
+1. To try the IdP-initiated flow, navigate directly to the IdP URL, authenticate then click the button to initiate the SAML flow to the SP.
+
+## How it works
+
+This interaction diagram shows the SP-initiated flow:
+
 ```mermaid
 sequenceDiagram
     participant Browser
@@ -120,12 +170,9 @@ sequenceDiagram
 
 
 ## Development
-SamlProxy uses bun. Install bun by following the instructions on the [bun website](https://bun.sh/docs/installation)
+SamlProxy uses [Bun](https://bun.sh/). Install it by following the instructions on the [Bun website](https://bun.sh/docs/installation)
 
-Environment variables are held in `.envrc`. You should copy `.envrc.template` and fill in the required env vars. This project uses [direnv](https://direnv.net/) to populate env vars for local development:
-```zsh
-brew install direnv
-```
+Environment variables are held in `.env`. You should copy `.env.template` and fill in the required env vars.
 
 This is a monorepo containing 3 packages:
 1. `proxy`: This is the core proxy package.
@@ -143,3 +190,8 @@ The script `scripts/cluster.ts` will start all three processes at the following 
 | proxy | <http://localhost:7272> |
 | sp    | <http://localhost:7282> |
 | idp   | <http://localhost:7292> |
+
+Run unit tests with:
+```zsh
+bun test
+```
