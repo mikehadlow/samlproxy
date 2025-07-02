@@ -100,6 +100,8 @@ fully encrypted assertions, but your service provider can't accept them.
 
 ## How to run the demo
 
+__TODO__: Create certificates and configure env vars.
+
 1. Install [Bun](https://bun.sh/) by following the instructions on the [Bun website](https://bun.sh/docs/installation)
 1. Clone the repository.
 1. Execute `bun install` in the root directory.
