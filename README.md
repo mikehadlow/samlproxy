@@ -101,11 +101,13 @@ fully encrypted assertions, but your service provider can't accept them.
 
 ## How to run the demo
 
-__TODO__: Create certificates and configure env vars.
+This project is intended as a runnable demo to demonstrate how one can configure and use a SAML Proxy. It's intended
+to be easy to setup and run.
 
 1. Install [Bun](https://bun.sh/) by following the instructions on the [Bun website](https://bun.sh/docs/installation)
 1. Clone the repository.
 1. Execute `bun install` in the root directory.
+1. Execute `bun run setup` in the root directory. This creates the `.env` file and X509 certificates.
 1. Execute `bun run dev` in the root directory.
 1. This will launch a cluster of SP, Proxy, and IdP. Use the displayed localhost URL to navigate to the SP.
 1. Login as one of the displayed users. Watch as you are redirected to the IdP to authenticate.
@@ -175,7 +177,11 @@ sequenceDiagram
 ## Development
 SamlProxy uses [Bun](https://bun.sh/). Install it by following the instructions on the [Bun website](https://bun.sh/docs/installation)
 
-Environment variables are held in `.env`. You should copy `.env.template` and fill in the required env vars.
+Create the `.env` file and X509 certificates with:
+```zsh
+bun run setup
+```
+(_Optional_ Customize your setup by modifying `.env.template` before running `bun run setup`)
 
 This is a monorepo containing 3 packages:
 1. `proxy`: This is the core proxy package.
