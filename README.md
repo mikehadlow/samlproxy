@@ -70,9 +70,10 @@ columns 6
     b-->db
 ```
 
-This project provides a fully functional implementation of a SAML Proxy indented as an example, or starting point for your own implementation.
-It also includes a Test SP and a Test IdP for demonstration purposes, but could also be the starting point for your own implementation. See
-below for instructions on how to run and inspect the demo.
+This project provides a fully functional implementation of a SAML Proxy intented as an example or starting point for your own implementation.
+It also includes a Test SP and a Test IdP for demonstration purposes, but these could also be the starting point for your own implementation.
+
+See below for instructions on how to run and inspect the demo.
 
 ## Why would I need one?
 
@@ -80,11 +81,11 @@ There are many reasons why you might need, or want, to use a SAML IdP Proxy. Fun
 applications from your identity providers. Some suggestions, but by no means an exhaustive list:
 
 * __Avoid IaaS vendor lock-in__: Every B2B SaaS product needs to offer "enterprise SSO" - SAML authentication - to its customers.
-It's an enormous time saver for many SaaS companies to use an Identity As A Service (IaaS) provider, such as OAuth, AWS Cognito, or Clerk
-for this. But with each of your customers individually configuring their own IdP to talk to your IaaS provider, it makes for a very
+It's an enormous time saver for SaaS venders to integrate with an Identity as a Service (IaaS) provider, such as OAuth, AWS Cognito, or Clerk
+rather than implement identity management, authentication and authorization in house.
+But with each of your customers individually configuring their own IdP to talk to your IaaS provider, it makes for a very
 deep lock-in. Without a proxy you will have to persuade each customer in turn to reconfigure their IdP before you can escape from your
 IaaS. With a proxy, you can migrate all your customers instantly to a different IaaS, or your own SP implementation.
-
 * __Auditing monitoring and logging__: IaaS providers can often be opaque black boxes when it comes to auditing, monitoring, or logging,
 which can make fulfilling regulatory requirements or diagnosing authentication issues difficult. A SAML Proxy can provide a tap for
 comprehensive logging of all SAML operations.
