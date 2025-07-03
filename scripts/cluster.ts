@@ -1,5 +1,13 @@
 import { spawn } from "bun";
 
+const getEnvVar = (name: string): string => {
+  if (!process.env[name]) {
+    console.error(`Environment variable ${name} is not set`);
+    process.exit(1);
+  }
+  return process.env[name];
+};
+
 const processOptions = (args: { package: string; port: number }) =>
   ({
     cmd: [
@@ -21,9 +29,24 @@ const processOptions = (args: { package: string; port: number }) =>
 const run = async () => {
   console.log("Starting the SAML Proxy test cluster (ctr-C to stop)");
   // Spawn the web server processes
-  const proxy = spawn(processOptions({ package: "proxy", port: 7272 }));
-  const sp = spawn(processOptions({ package: "testsp", port: 7282 }));
-  const idp = spawn(processOptions({ package: "testidp", port: 7292 }));
+  const proxy = spawn(
+    processOptions({
+      package: "proxy",
+      port: parseInt(getEnvVar("SAML_PROXY_PORT")),
+    }),
+  );
+  const sp = spawn(
+    processOptions({
+      package: "testsp",
+      port: parseInt(getEnvVar("TEST_SP_PORT")),
+    }),
+  );
+  const idp = spawn(
+    processOptions({
+      package: "testidp",
+      port: parseInt(getEnvVar("TEST_IDP_PORT")),
+    }),
+  );
 
   // exit cleanup
   process.on("SIGINT", () => {
