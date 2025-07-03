@@ -25,11 +25,16 @@ export const loadKeys = (args: {
     certificateFile,
   } = args
 
-  const encryptionKey = fs.readFileSync(path.join(keysBasePath, encryptionKeyFile), "utf-8")
+  // if keysBasePath is not a rooted path, combine it with the project rooted path
+  const keysPath = (path.isAbsolute(keysBasePath))
+    ? keysBasePath
+    : path.join(process.cwd(), "../..", keysBasePath)
+
+  const encryptionKey = fs.readFileSync(path.join(keysPath, encryptionKeyFile), "utf-8")
   if (!encryptionKey) {
     return r.fail("Missing encryptionKey")
   }
-  const certificate = fs.readFileSync(path.join(keysBasePath, certificateFile), "utf-8")
+  const certificate = fs.readFileSync(path.join(keysPath, certificateFile), "utf-8")
   if (!certificate) {
     return r.fail("Missing certificate")
   }
@@ -48,7 +53,13 @@ export const loadCertificate = (args: {
     keysBasePath,
     certificateFile,
   } = args
-  const certificate = fs.readFileSync(path.join(keysBasePath, certificateFile), "utf-8")
+
+  // if keysBasePath is not a rooted path, combine it with the project rooted path
+  const keysPath = (path.isAbsolute(keysBasePath))
+    ? keysBasePath
+    : path.join(process.cwd(), "../..", keysBasePath)
+
+  const certificate = fs.readFileSync(path.join(keysPath, certificateFile), "utf-8")
   if (!certificate) {
     return r.fail("Missing certificate")
   }

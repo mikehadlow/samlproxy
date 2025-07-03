@@ -5,6 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bunx tsc --noEmit; bun scripts/cluster.ts"
+    "dev": "bunx tsc --noEmit; bun scripts/cluster.ts",
+    "setup": "bun scripts/generateEnv.ts; bun scripts/generateKeys.ts"
   }
 }
