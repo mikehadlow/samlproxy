@@ -28,7 +28,7 @@ export const loadKeys = (args: {
   // if keysBasePath is not a rooted path, combine it with the project rooted path
   const keysPath = (path.isAbsolute(keysBasePath))
     ? keysBasePath
-    : path.join(process.cwd(), "../..", keysBasePath)
+    : path.join(__dirname, "../../..", keysBasePath)
 
   const encryptionKey = fs.readFileSync(path.join(keysPath, encryptionKeyFile), "utf-8")
   if (!encryptionKey) {
@@ -57,7 +57,7 @@ export const loadCertificate = (args: {
   // if keysBasePath is not a rooted path, combine it with the project rooted path
   const keysPath = (path.isAbsolute(keysBasePath))
     ? keysBasePath
-    : path.join(process.cwd(), "../..", keysBasePath)
+    : path.join(__dirname, "../../..", keysBasePath)
 
   const certificate = fs.readFileSync(path.join(keysPath, certificateFile), "utf-8")
   if (!certificate) {
