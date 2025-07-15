@@ -125,13 +125,7 @@ to be easy to setup and run.
 1. Login as one of the displayed users. Watch as you are redirected to the IdP to authenticate.
 1. To try the IdP-initiated flow, navigate directly to the IdP URL, authenticate then click the button to initiate the SAML flow to the SP.
 
-## Demo Video
-
-Here's a walkthrough of the SAML Proxy in action:
-
 ![](saml_proxy_demo.gif)
-
-_Note: You may need to convert the .mov file to .mp4 for broader browser compatibility using a tool like ffmpeg: `ffmpeg -i demo.mov demo.mp4`_
 
 To view the SAML interactions install a SAML tracing browser plug-in. I use [SAML Chrome Panel](https://chromewebstore.google.com/detail/saml-chrome-panel/paijfdbeoenhembfhkhllainmocckace?hl=en)
 
