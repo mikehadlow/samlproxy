@@ -1,8 +1,8 @@
 # SAML Proxy
 
-An an example implementation of a SAML IdP Proxy
+An example implementation of a SAML IdP Proxy
 
-__WARNING__: This project is provided as an example only. It comes with no waranty whatsoever. Use at entirely your own risk.
+__WARNING__: _This project is provided as an example only. It comes with no waranty whatsoever. Use at entirely your own risk._
 
 ## Table of Contents
 
@@ -83,9 +83,9 @@ columns 6
 
 This project provides a fully functional implementation of a SAML Proxy intented as an example or starting point for your own implementation.
 
-It also includes a Test SP and a Test IdP for demonstration purposes, but these could also be the starting point for your own implementation.
+It also includes a Test SP and a Test IdP for demonstration purposes, but these could also be the starting point for your own implementations.
 
-See below for instructions on how to run and inspect the demo.
+See [below](#how-to-run-the-demo) for instructions on how to run and inspect the demo.
 
 ## Why would I need one?
 
@@ -93,11 +93,11 @@ There are many reasons why you might need, or want, to use a SAML IdP Proxy. Fun
 applications from your identity providers. Some suggestions, but by no means an exhaustive list:
 
 * __Avoid IaaS vendor lock-in__: Every B2B SaaS product needs to offer "enterprise SSO" - SAML authentication - to its customers.
-It's an enormous time saver for SaaS venders to integrate with an Identity as a Service (IaaS) provider, such as OAuth, AWS Cognito, or Clerk
+It's an enormous time saver for SaaS venders to integrate with an Identity as a Service (IaaS) provider, such as OAuth, AWS Cognito, Work OS, or Clerk
 rather than implement identity management, authentication and authorization in house.
-But with each of your customers individually configuring their own IdP to talk to your IaaS provider, it makes for a very
+But with each of your customers individually configuring their own IdP to talk to your IaaS provider, it makes for very
 deep lock-in. Without a proxy you will have to persuade each customer in turn to reconfigure their IdP before you can escape from your
-IaaS. With a proxy, you can migrate all your customers instantly to a different IaaS, or your own SP implementation.
+IaaS. With a proxy, you can migrate all your customers instantly to a different IaaS, or your own SP implementation. This was the motivation behind my original interest in a SAML Proxy. I was part of a team which migrated several hundred customers away from Auth0 and Cognito using this method.
 * __Auditing monitoring and logging__: IaaS providers can often be opaque black boxes when it comes to auditing, monitoring, or logging,
 which can make fulfilling regulatory requirements or diagnosing authentication issues difficult. A SAML Proxy can provide a tap for
 comprehensive logging of all SAML operations.
@@ -191,6 +191,13 @@ sequenceDiagram
 
 
 ## Development
+
+This is a monorepo containing 4 packages:
+1. `common`: This contains the core SAML logic and other common functions. It uses the excellent [Samlify](https://samlify.js.org/#/) SAML library.
+1. `proxy`: This is the core proxy package.
+1. `testsp`: This is a test SAML service provider (SP). This mimics the application that needs to authenticate.
+1. `testidp`: This is test SAML identity provider (IdP). This mimics an identity provider, such as Okta or Auth0.
+
 SamlProxy uses [Bun](https://bun.sh/). Install it by following the instructions on the [Bun website](https://bun.sh/docs/installation)
 
 Create the `.env` file and X509 certificates with:
@@ -198,11 +205,6 @@ Create the `.env` file and X509 certificates with:
 bun run setup
 ```
 (_Optional_ Customize your setup by modifying `.env.template` before running `bun run setup`)
-
-This is a monorepo containing 3 packages:
-1. `proxy`: This is the core proxy package.
-1. `testsp`: This is a test SAML service provider (SP). This mimics the application that needs to authenticate.
-1. `testidp`: This is test SAML identity provider (IdP). This mimics an identity provider, such as Okta or Auth0.
 
 Start with:
 ```zsh
