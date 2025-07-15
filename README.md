@@ -129,11 +129,7 @@ to be easy to setup and run.
 
 Here's a walkthrough of the SAML Proxy in action:
 
-<video width="100%" controls>
-  <source src="saml_proxy_demo.mov" type="video/quicktime">
-  <source src="saml_proxy_demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![](saml_proxy_demo.gif)
 
 _Note: You may need to convert the .mov file to .mp4 for broader browser compatibility using a tool like ffmpeg: `ffmpeg -i demo.mov demo.mp4`_
 
