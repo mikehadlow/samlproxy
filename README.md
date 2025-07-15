@@ -1,8 +1,19 @@
 # SAML Proxy
 
+An an example implementation of a SAML IdP Proxy
+
 __WARNING__: This project is provided as an example only. It comes with no waranty whatsoever. Use at entirely your own risk.
 
-An an example implementation of a SAML IdP Proxy
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Why would I need one?](#why-would-i-need-one)
+- [How to run the demo](#how-to-run-the-demo)
+- [How it works](#how-it-works)
+- [Useful links](#useful-links)
+- [Development](#development)
+
+## Introduction
 
 A SAML IdP Proxy is a stand-alone service that sits between an SP (Service Provider - usually your application,
 or a 3rd party IaaS), and an IdP (Identity Provider - the authentication system. This can
@@ -71,6 +82,7 @@ columns 6
 ```
 
 This project provides a fully functional implementation of a SAML Proxy intented as an example or starting point for your own implementation.
+
 It also includes a Test SP and a Test IdP for demonstration purposes, but these could also be the starting point for your own implementation.
 
 See below for instructions on how to run and inspect the demo.
