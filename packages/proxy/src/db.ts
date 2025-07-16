@@ -113,6 +113,14 @@ export const getLinkedIdpEntityId = (db: Database, args: { spEntityId: string })
 }
 
 export const initDb = (): Database => {
+  // SAML Proxy uses a in-memory SqlLite database. For any serious scenarios this
+  // Should be changed to a persistent store. To do this comment out the following
+  // code and return a new SqlList connection to your pre-created file based DB.
+  // See README.md for more details.
+  //
+  // return new Database("path/to/samlProxy.sqlite", {
+  //   strict: true,
+  // })
   const con = createDb([
     createSpConnectionTable,
     createIdpConnectionTable,
