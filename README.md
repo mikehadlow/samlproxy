@@ -12,6 +12,7 @@ __WARNING__: _This project is provided as an example only. It comes with no wara
 - [How it works](#how-it-works)
 - [Useful links](#useful-links)
 - [Development](#development)
+- [How can I use this?](#how-can-i-use-this)
 
 ## Introduction
 
@@ -221,4 +222,54 @@ The script `scripts/cluster.ts` will start all three processes at the following 
 Run unit tests with:
 ```zsh
 bun test
+```
+
+## How can I use this?
+
+The SAML Proxy cannot be used for your scenario out-of-the-box, you will need to customize it for your own purposes.
+
+### Database
+
+```mermaid
+erDiagram
+    idp_connection {
+        TEXT id PK
+        TEXT name
+        TEXT idp_entity_id
+        TEXT idp_sso_url
+        TEXT signing_certificate
+        TEXT sp_entity_id
+        TEXT sp_acs_url
+        INT sp_allow_idp_initiated
+    }
+
+    sp_connection {
+        TEXT id PK
+        TEXT name
+        TEXT sp_entity_id
+        TEXT sp_acs_url
+        TEXT idp_entity_id
+        TEXT idp_sso_url
+        TEXT private_key
+        TEXT private_key_password
+        TEXT signing_certificate
+    }
+
+    relay_state {
+        TEXT relay_state PK
+        TEXT sp_request_id
+        TEXT proxy_request_id
+        TEXT sp_entity_id
+        INT timestamp
+        INT used
+    }
+
+    sp_to_idp_link {
+        TEXT sp_entity_id
+        TEXT idp_entity_id
+    }
+
+    sp_connection ||--o{ sp_to_idp_link : sp_entity_id
+    idp_connection ||--o{ sp_to_idp_link : idp_entity_id
+    sp_connection ||--o{ relay_state : sp_entity_id
 ```
