@@ -230,6 +230,20 @@ The SAML Proxy cannot be used for your scenario out-of-the-box, you will need to
 
 ### Database
 
+The SAML Proxy database is an in-memory SqlLite DB. At a minimum for use in production you would need to change this
+to a persistent store, either using SqlLite, or a full relational database server such as PostgreSql. The existing DB
+code is very simple and can be found in `packages/proxy/src/db.ts` and `packages/common/src/db.ts`.
+
+At startup the tables `sp_connection`, `idp_connection`, and `sp_to_idp_link` are populated by `initializeConnections`
+in `packages/proxy/src/connection.ts`. You will need to populate these with the relevant values for your SPs, IdPs,
+and the connections between them.
+
+- `sp_connection` represents the connection to an SP, where the Proxy is acting as an IdP.
+- `idp_connection` represents the connection to an IdP, where the Proxy is acting as an SP.
+- `sp_to_idp_link` is the link between an SP and an IdP. It tells the Proxy where to forward the SAML authentication request.
+- `relay_state` stores a record of each `AuthnRequest`. It's used to validate incoming assertions. It's the only non "read only"
+table at runtime.
+
 ```mermaid
 erDiagram
     idp_connection {
