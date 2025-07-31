@@ -90,27 +90,43 @@ See [below](#how-to-run-the-demo) for instructions on how to run and inspect the
 
 ## Why would I need one?
 
-There are many reasons why you might need, or want, to use a SAML IdP Proxy. Fundamentally it allows you to decouple your SSO enabled
-applications from your identity providers. Some suggestions, but by no means an exhaustive list:
+There are many reasons why you might need, or want, to use a SAML IdP Proxy.
+Fundamentally it allows you to decouple your SSO enabled applications from your
+identity providers. Some suggestions, but by no means an exhaustive list:
 
-* __Avoid IaaS vendor lock-in__: Every B2B SaaS product needs to offer "enterprise SSO" - SAML authentication - to its customers.
-It's an enormous time saver for SaaS venders to integrate with an Identity as a Service (IaaS) provider, such as OAuth, AWS Cognito, Work OS, or Clerk
-rather than implement identity management, authentication and authorization in house.
-But with each of your customers individually configuring their own IdP to talk to your IaaS provider, it makes for very
-deep lock-in. Without a proxy you will have to persuade each customer in turn to reconfigure their IdP before you can escape from your
-IaaS. With a proxy, you can migrate all your customers instantly to a different IaaS, or your own SP implementation. This was the motivation behind my original interest in a SAML Proxy. I was part of a team which migrated several hundred customers away from Auth0 and Cognito using this method.
-* __Auditing monitoring and logging__: IaaS providers can often be opaque black boxes when it comes to auditing, monitoring, or logging,
-which can make fulfilling regulatory requirements or diagnosing authentication issues difficult. A SAML Proxy can provide a tap for
-comprehensive logging of all SAML operations.
-* __Identity Provider Consolidation__: Provide a single IdP endpoint to applications while routing to different IdPs based on arbitrary
-criteria (email domain, user ID, name of cat, whatever).
-* __Service Provider Consolidation__: Provide a single SP endpoint for multiple applications and route appropriately. This could be
-useful in a company merger scenario for example.
-* __Attribute Transformation__: Modify SAML Assertion attributes to match the expectations of your applications. For example, your
-SP might expect an `employeeId`, but your IdP can only provide a `userId`.
-* __Enhanced Security__: Add additional authentication factors, session management, or security policies. Perhaps you want to enforce
-fully encrypted assertions, but your service provider can't accept them.
-* __Anonymize__: You might want to hide the details of your SPs from IdP(s) or vice-versa.
+* __Avoid IaaS vendor lock-in__: Every B2B SaaS product needs to offer
+  "enterprise SSO" - SAML authentication - to its customers. It's an enormous
+  time saver for SaaS venders to integrate with an Identity as a Service (IaaS)
+  provider, such as OAuth, AWS Cognito, Work OS, or Clerk rather than implement
+  identity management, authentication and authorization in house. But with each
+  of your customers individually configuring their own IdP to talk to your IaaS
+  provider, it makes for very deep lock-in. Without a proxy you will have to
+  persuade each customer in turn to reconfigure their IdP before you can escape
+  from your IaaS. With a proxy, you can migrate all your customers instantly to
+  a different IaaS, or your own SP implementation. This was the motivation
+  behind my original interest in a SAML Proxy. I was part of a team which
+  migrated several hundred customers away from Auth0 and Cognito using this
+  method. See my blog post about this: [Avoid IaaS Lock-in With a SAML
+  Proxy](https://mikehadlow.com/posts/2025-07-17-avoid-identity-vendor-lock-in/)
+* __Auditing monitoring and logging__: IaaS providers can often be opaque black
+  boxes when it comes to auditing, monitoring, or logging, which can make
+  fulfilling regulatory requirements or diagnosing authentication issues
+  difficult. A SAML Proxy can provide a tap for comprehensive logging of all
+  SAML operations.
+* __Identity Provider Consolidation__: Provide a single IdP endpoint to
+  applications while routing to different IdPs based on arbitrary criteria
+  (email domain, user ID, name of cat, whatever).
+* __Service Provider Consolidation__: Provide a single SP endpoint for multiple
+  applications and route appropriately. This could be useful in a company merger
+  scenario for example.
+* __Attribute Transformation__: Modify SAML Assertion attributes to match the
+  expectations of your applications. For example, your SP might expect an
+  `employeeId`, but your IdP can only provide a `userId`.
+* __Enhanced Security__: Add additional authentication factors, session
+  management, or security policies. Perhaps you want to enforce fully encrypted
+  assertions, but your service provider can't accept them.
+* __Anonymize__: You might want to hide the details of your SPs from IdP(s) or
+  vice-versa.
 
 ## How to run the demo
 
